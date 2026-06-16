@@ -1,78 +1,9 @@
-====================================================
-REPOSITORIOS GITHUB — PROYECTO SANOS Y SALVOS
-Evaluación Parcial N°2 — Fullstack III DSY1106
-====================================================
+REPOSITORIOS SANOS Y SALVOS!!!!!!!!
 
-Estudiantes: Bastian Martinez Flores | Maicol Saldivia Silva
-Docente: Daniel Williams Concha Saavedra
-Sección: 002D
-Fecha: Junio 2026
 
-----------------------------------------------------
-REPOSITORIO PRINCIPAL
-----------------------------------------------------
-URL: https://github.com/[tu-usuario]/sanos-y-salvos
-Descripción: Repositorio raíz del proyecto. Contiene el monorepo
-             con todos los microservicios, el BFF y el frontend.
-             Incluye docker-compose.yml y documentación general.
+PROYECTO PRINCIPAL (BACKEND): https://github.com/MaiSaldivia/sanos-y-salvos-backend.git
 
-----------------------------------------------------
-REPOSITORIOS INDIVIDUALES POR COMPONENTE
-----------------------------------------------------
+FRONTEND: https://github.com/MaiSaldivia/sanos-y-salvos-frontend.git
 
-1. FRONTEND (React + Vite)
-   URL: https://github.com/[tu-usuario]/sanos-y-salvos-frontend
-   Puerto: 5173
-   Descripción: Aplicación React con páginas Home, Mascotas,
-                Detalle, Reportar, Mapa y Login. Consume el BFF
-                via proxy Vite. Implementa Circuit Breaker visual.
+MICROSERVICIOS: https://github.com/ZEETAALOL/sanos-y-salvos-microservicios.git
 
-2. BFF - Backend For Frontend
-   URL: https://github.com/[tu-usuario]/sanos-y-salvos-backend/tree/main/microservicios/bff
-   Puerto: 3005
-   Descripción: Proxy inteligente que centraliza las peticiones
-                del frontend y distribuye a los microservicios.
-                Implementa el patron Circuit Breaker con estados
-                CLOSED/OPEN/HALF_OPEN para cada microservicio.
-   Endpoint de monitoreo: GET /api/status
-
-3. MS-GESTION-MASCOTAS
-   URL: https://github.com/[tu-usuario]/sanos-y-salvos-backend/tree/main/microservicios/ms-gestion-mascotas
-   Puerto: 3001
-   Descripción: Microservicio principal. Gestiona el ciclo de vida
-                de mascotas perdidas y encontradas. Implementa
-                3 patrones de diseno: Repository (acceso a datos),
-                Factory Method (creacion de alertas y objetos),
-                Observer (notificaciones de cambios de estado).
-                Pruebas unitarias con Jest incluidas.
-
-4. MS-GEOLOCALIZACION
-   URL: https://github.com/[tu-usuario]/sanos-y-salvos-backend/tree/main/microservicios/ms-geolocalizacion
-   Puerto: 3002
-   Descripción: Microservicio de datos geograficos. Expone puntos
-                de reportes, zonas criticas por comuna y datos
-                para mapa de calor. Patron Repository implementado.
-
-5. MS-MOTOR-COINCIDENCIAS
-   URL: https://github.com/[tu-usuario]/sanos-y-salvos-backend/tree/main/microservicios/ms-motor-coincidencias
-   Puerto: 3003
-   Descripción: Motor de matching entre mascotas. Implementa
-                algoritmo de scoring (0-100) basado en tipo,
-                raza, color, tamano y distancia geografica via
-                formula Haversine. Pruebas unitarias incluidas.
-
-6. MS-USUARIOS-ENTIDADES
-   URL: https://github.com/[tu-usuario]/sanos-y-salvos-backend/tree/main/microservicios/ms-usuarios-entidades
-   Puerto: 3004
-   Descripcion: Autenticacion JWT y gestion de usuarios con
-                roles RBAC (DUENO, VETERINARIA, REFUGIO,
-                MUNICIPALIDAD, ADMIN). Patron Repository
-                implementado. Pruebas unitarias con Jest.
-
-----------------------------------------------------
-INSTRUCCIONES PARA CLONAR Y EJECUTAR
-----------------------------------------------------
-Ver README.md en el repositorio principal.
-Requiere XAMPP con MySQL activo y ejecutar database/setup.sql
-
-====================================================

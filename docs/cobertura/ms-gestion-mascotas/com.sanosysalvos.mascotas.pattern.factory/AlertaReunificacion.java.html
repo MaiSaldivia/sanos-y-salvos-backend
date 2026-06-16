@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AlertaReunificacion.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-gestion-mascotas</a> &gt; <a href="index.source.html" class="el_package">com.sanosysalvos.mascotas.pattern.factory</a> &gt; <span class="el_source">AlertaReunificacion.java</span></div><h1>AlertaReunificacion.java</h1><pre class="source lang-java linenums">package com.sanosysalvos.mascotas.pattern.factory;
+
+public class AlertaReunificacion extends Alerta {
+
+    private final String nombre;
+
+    public AlertaReunificacion(String idMascota, String contacto, String sector, String nombre) {
+<span class="nc" id="L8">        super(idMascota, contacto, sector);</span>
+<span class="nc bnc" id="L9" title="All 2 branches missed.">        this.nombre = nombre != null ? nombre : &quot;Sin nombre&quot;;</span>
+<span class="nc" id="L10">    }</span>
+
+    @Override
+    public String getMensaje() {
+<span class="nc" id="L14">        return String.format(&quot;✅ REUNIFICADO: \&quot;%s\&quot; fue reencontrado con su dueño. Gracias a la comunidad.&quot;, nombre);</span>
+    }
+
+    public String getNombre() {
+<span class="nc" id="L18">        return nombre;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

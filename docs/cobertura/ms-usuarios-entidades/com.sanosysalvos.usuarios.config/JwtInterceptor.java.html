@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtInterceptor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-usuarios-entidades</a> &gt; <a href="index.source.html" class="el_package">com.sanosysalvos.usuarios.config</a> &gt; <span class="el_source">JwtInterceptor.java</span></div><h1>JwtInterceptor.java</h1><pre class="source lang-java linenums">package com.sanosysalvos.usuarios.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sanosysalvos.usuarios.model.Rol;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerInterceptor;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+@Component
+<span class="nc" id="L18">public class JwtInterceptor implements HandlerInterceptor {</span>
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+<span class="nc" id="L23">    private final ObjectMapper objectMapper = new ObjectMapper();</span>
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+<span class="nc bnc" id="L27" title="All 2 branches missed.">        if (!(handler instanceof HandlerMethod)) {</span>
+<span class="nc" id="L28">            return true;</span>
+        }
+
+<span class="nc" id="L31">        HandlerMethod handlerMethod = (HandlerMethod) handler;</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        boolean requiresAuth = handlerMethod.hasMethodAnnotation(RequireAuth.class) </span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">                || handlerMethod.getBeanType().isAnnotationPresent(RequireAuth.class);</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        boolean requiresRole = handlerMethod.hasMethodAnnotation(RequireRole.class)</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">                || handlerMethod.getBeanType().isAnnotationPresent(RequireRole.class);</span>
+
+        // Si no requiere auth ni rol, dejamos pasar
+<span class="nc bnc" id="L38" title="All 4 branches missed.">        if (!requiresAuth &amp;&amp; !requiresRole) {</span>
+            // Sin embargo, si hay un token válido presente, extraemos los datos igualmente 
+            // (por ejemplo para el endpoint de reportar mascota que asocia el id_usuario si está logueado)
+<span class="nc" id="L41">            extraerTokenSiExiste(request);</span>
+<span class="nc" id="L42">            return true;</span>
+        }
+
+<span class="nc" id="L45">        String authHeader = request.getHeader(&quot;Authorization&quot;);</span>
+<span class="nc bnc" id="L46" title="All 4 branches missed.">        if (authHeader == null || !authHeader.startsWith(&quot;Bearer &quot;)) {</span>
+<span class="nc" id="L47">            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, &quot;Token requerido&quot;);</span>
+<span class="nc" id="L48">            return false;</span>
+        }
+
+<span class="nc" id="L51">        String token = authHeader.substring(7);</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (!jwtUtil.validarToken(token)) {</span>
+<span class="nc" id="L53">            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, &quot;Token inválido o expirado&quot;);</span>
+<span class="nc" id="L54">            return false;</span>
+        }
+
+<span class="nc" id="L57">        Claims claims = jwtUtil.extraerClaims(token);</span>
+<span class="nc" id="L58">        String userId = claims.getSubject();</span>
+<span class="nc" id="L59">        String rolString = (String) claims.get(&quot;rol&quot;);</span>
+<span class="nc" id="L60">        Rol rol = Rol.valueOf(rolString);</span>
+
+<span class="nc" id="L62">        request.setAttribute(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L63">        request.setAttribute(&quot;userRol&quot;, rol);</span>
+<span class="nc" id="L64">        request.setAttribute(&quot;userNombre&quot;, claims.get(&quot;nombre&quot;));</span>
+<span class="nc" id="L65">        request.setAttribute(&quot;userEmail&quot;, claims.get(&quot;email&quot;));</span>
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (requiresRole) {</span>
+<span class="nc" id="L68">            RequireRole requireRoleAnnotation = handlerMethod.getMethodAnnotation(RequireRole.class);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            if (requireRoleAnnotation == null) {</span>
+<span class="nc" id="L70">                requireRoleAnnotation = handlerMethod.getBeanType().getAnnotation(RequireRole.class);</span>
+            }
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            if (requireRoleAnnotation != null) {</span>
+<span class="nc" id="L74">                Rol[] rolesPermitidos = requireRoleAnnotation.value();</span>
+<span class="nc" id="L75">                boolean tieneRol = Arrays.asList(rolesPermitidos).contains(rol);</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">                if (!tieneRol) {</span>
+<span class="nc" id="L77">                    sendErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, &quot;Permisos insuficientes&quot;);</span>
+<span class="nc" id="L78">                    return false;</span>
+                }
+            }
+        }
+
+<span class="nc" id="L83">        return true;</span>
+    }
+
+    private void extraerTokenSiExiste(HttpServletRequest request) {
+<span class="nc" id="L87">        String authHeader = request.getHeader(&quot;Authorization&quot;);</span>
+<span class="nc bnc" id="L88" title="All 4 branches missed.">        if (authHeader != null &amp;&amp; authHeader.startsWith(&quot;Bearer &quot;)) {</span>
+<span class="nc" id="L89">            String token = authHeader.substring(7);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">            if (jwtUtil.validarToken(token)) {</span>
+<span class="nc" id="L91">                Claims claims = jwtUtil.extraerClaims(token);</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">                if (claims != null) {</span>
+<span class="nc" id="L93">                    request.setAttribute(&quot;userId&quot;, claims.getSubject());</span>
+<span class="nc" id="L94">                    request.setAttribute(&quot;userRol&quot;, Rol.valueOf((String) claims.get(&quot;rol&quot;)));</span>
+                }
+            }
+        }
+<span class="nc" id="L98">    }</span>
+
+    private void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
+<span class="nc" id="L101">        response.setStatus(status);</span>
+<span class="nc" id="L102">        response.setContentType(&quot;application/json&quot;);</span>
+<span class="nc" id="L103">        response.setCharacterEncoding(&quot;UTF-8&quot;);</span>
+
+<span class="nc" id="L105">        Map&lt;String, Object&gt; errorMap = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L106">        errorMap.put(&quot;success&quot;, false);</span>
+<span class="nc" id="L107">        errorMap.put(&quot;message&quot;, message);</span>
+
+<span class="nc" id="L109">        String json = objectMapper.writeValueAsString(errorMap);</span>
+<span class="nc" id="L110">        response.getWriter().write(json);</span>
+<span class="nc" id="L111">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

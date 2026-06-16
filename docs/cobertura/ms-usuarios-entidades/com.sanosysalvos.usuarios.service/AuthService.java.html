@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-usuarios-entidades</a> &gt; <a href="index.source.html" class="el_package">com.sanosysalvos.usuarios.service</a> &gt; <span class="el_source">AuthService.java</span></div><h1>AuthService.java</h1><pre class="source lang-java linenums">package com.sanosysalvos.usuarios.service;
+
+import com.sanosysalvos.usuarios.config.JwtUtil;
+import com.sanosysalvos.usuarios.dto.*;
+import com.sanosysalvos.usuarios.model.Rol;
+import com.sanosysalvos.usuarios.model.Usuario;
+import com.sanosysalvos.usuarios.repository.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+@Service
+<span class="fc" id="L18">public class AuthService {</span>
+
+    @Autowired
+    private UsuarioRepository repo;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+<span class="fc" id="L26">    private static final Pattern EMAIL_PATTERN = Pattern.compile(&quot;^[\\w-\\.]+@[\\w-\\.]+\\.[a-z]{2,4}$&quot;, Pattern.CASE_INSENSITIVE);</span>
+
+    private UserPublicDto mapToPublicDto(Usuario u) {
+<span class="fc" id="L29">        return UserPublicDto.builder()</span>
+<span class="fc" id="L30">                .idUsuario(u.getIdUsuario())</span>
+<span class="fc" id="L31">                .nombre(u.getNombre())</span>
+<span class="fc" id="L32">                .email(u.getEmail())</span>
+<span class="fc" id="L33">                .rol(u.getRol())</span>
+<span class="fc" id="L34">                .activo(u.getActivo())</span>
+<span class="fc" id="L35">                .permisos(u.getRol().getPermisos())</span>
+<span class="fc" id="L36">                .createdAt(u.getCreatedAt())</span>
+<span class="fc" id="L37">                .build();</span>
+    }
+
+    // ── Login ──────────────────────────────────────────────────
+    public LoginResponse login(String email, String password) {
+<span class="pc bpc" id="L42" title="1 of 4 branches missed.">        if (email == null || email.trim().isEmpty()) {</span>
+<span class="fc" id="L43">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;El email es requerido&quot;);</span>
+        }
+<span class="pc bpc" id="L45" title="1 of 4 branches missed.">        if (password == null || password.trim().isEmpty()) {</span>
+<span class="fc" id="L46">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;La contraseña es requerida&quot;);</span>
+        }
+
+<span class="fc" id="L49">        Usuario u = repo.findByEmailAndActivoTrue(email.toLowerCase().trim())</span>
+<span class="fc" id="L50">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Email o contraseña incorrectos&quot;));</span>
+
+        // En producción se usaría bcrypt, aquí se usa texto plano igual que el original
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (!u.getPasswordHash().equals(password)) {</span>
+<span class="fc" id="L54">            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Email o contraseña incorrectos&quot;);</span>
+        }
+
+<span class="fc" id="L57">        String token = jwtUtil.generarToken(u.getIdUsuario(), u.getNombre(), u.getEmail(), u.getRol());</span>
+
+<span class="fc" id="L59">        return LoginResponse.builder()</span>
+<span class="fc" id="L60">                .token(token)</span>
+<span class="fc" id="L61">                .usuario(mapToPublicDto(u))</span>
+<span class="fc" id="L62">                .build();</span>
+    }
+
+    // ── Registro ───────────────────────────────────────────────
+    public LoginResponse register(RegisterRequest req) {
+<span class="pc bpc" id="L67" title="1 of 4 branches missed.">        if (req.getNombre() == null || req.getNombre().trim().length() &lt; 2) {</span>
+<span class="fc" id="L68">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;El nombre debe tener al menos 2 caracteres&quot;);</span>
+        }
+<span class="pc bpc" id="L70" title="2 of 4 branches missed.">        if (req.getEmail() == null || !EMAIL_PATTERN.matcher(req.getEmail()).matches()) {</span>
+<span class="nc" id="L71">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;El email no es válido&quot;);</span>
+        }
+<span class="pc bpc" id="L73" title="1 of 4 branches missed.">        if (req.getPassword() == null || req.getPassword().length() &lt; 6) {</span>
+<span class="fc" id="L74">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;La contraseña debe tener al menos 6 caracteres&quot;);</span>
+        }
+
+<span class="fc" id="L77">        boolean existe = repo.existsByEmail(req.getEmail().toLowerCase().trim());</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (existe) {</span>
+<span class="fc" id="L79">            throw new ResponseStatusException(HttpStatus.CONFLICT, &quot;Ya existe una cuenta con ese email&quot;);</span>
+        }
+
+<span class="pc bpc" id="L82" title="1 of 4 branches missed.">        Rol rolFinal = (req.getRol() != null &amp;&amp; req.getRol() != Rol.ADMIN) ? req.getRol() : Rol.DUENO;</span>
+
+<span class="fc" id="L84">        Usuario nuevo = Usuario.builder()</span>
+<span class="fc" id="L85">                .idUsuario(UUID.randomUUID().toString())</span>
+<span class="fc" id="L86">                .nombre(req.getNombre().trim())</span>
+<span class="fc" id="L87">                .email(req.getEmail().toLowerCase().trim())</span>
+<span class="fc" id="L88">                .passwordHash(req.getPassword()) // texto plano</span>
+<span class="fc" id="L89">                .rol(rolFinal)</span>
+<span class="fc" id="L90">                .activo(true)</span>
+<span class="fc" id="L91">                .build();</span>
+
+<span class="fc" id="L93">        Usuario guardado = repo.save(nuevo);</span>
+<span class="fc" id="L94">        String token = jwtUtil.generarToken(guardado.getIdUsuario(), guardado.getNombre(), guardado.getEmail(), guardado.getRol());</span>
+
+        // Recargamos el usuario para tener createdAt seteado por BD (o PrePersist)
+<span class="fc" id="L97">        guardado = repo.findById(guardado.getIdUsuario()).orElse(guardado);</span>
+
+<span class="fc" id="L99">        return LoginResponse.builder()</span>
+<span class="fc" id="L100">                .token(token)</span>
+<span class="fc" id="L101">                .usuario(mapToPublicDto(guardado))</span>
+<span class="fc" id="L102">                .build();</span>
+    }
+
+    // ── Obtener perfil propio ──────────────────────────────────
+    public UserPublicDto getPerfil(String idUsuario) {
+<span class="fc" id="L107">        Usuario u = repo.findById(idUsuario)</span>
+<span class="fc" id="L108">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Usuario no encontrado&quot;));</span>
+<span class="fc" id="L109">        return mapToPublicDto(u);</span>
+    }
+
+    // ── Cambiar contraseña ─────────────────────────────────────
+    public void cambiarPassword(String idUsuario, PasswordRequest req) {
+<span class="pc bpc" id="L114" title="2 of 4 branches missed.">        if (req.getPasswordActual() == null || req.getPasswordActual().isEmpty()) {</span>
+<span class="nc" id="L115">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;La contraseña actual es requerida&quot;);</span>
+        }
+<span class="pc bpc" id="L117" title="2 of 4 branches missed.">        if (req.getPasswordNuevo() == null || req.getPasswordNuevo().length() &lt; 6) {</span>
+<span class="nc" id="L118">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;La nueva contraseña debe tener al menos 6 caracteres&quot;);</span>
+        }
+<span class="fc bfc" id="L120" title="All 2 branches covered.">        if (req.getPasswordActual().equals(req.getPasswordNuevo())) {</span>
+<span class="fc" id="L121">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;La nueva contraseña debe ser diferente a la actual&quot;);</span>
+        }
+
+<span class="fc" id="L124">        Usuario u = repo.findById(idUsuario)</span>
+<span class="pc" id="L125">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Usuario no encontrado&quot;));</span>
+
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (!u.getPasswordHash().equals(req.getPasswordActual())) {</span>
+<span class="fc" id="L128">            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Contraseña actual incorrecta&quot;);</span>
+        }
+
+<span class="fc" id="L131">        u.setPasswordHash(req.getPasswordNuevo());</span>
+<span class="fc" id="L132">        repo.save(u);</span>
+<span class="fc" id="L133">    }</span>
+
+    // ── Actualizar nombre ──────────────────────────────────────
+    public UserPublicDto actualizarPerfil(String idUsuario, ProfileRequest req) {
+<span class="pc bpc" id="L137" title="1 of 4 branches missed.">        if (req.getNombre() == null || req.getNombre().trim().length() &lt; 2) {</span>
+<span class="fc" id="L138">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;El nombre debe tener al menos 2 caracteres&quot;);</span>
+        }
+
+<span class="fc" id="L141">        Usuario u = repo.findById(idUsuario)</span>
+<span class="pc" id="L142">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Usuario no encontrado&quot;));</span>
+
+<span class="fc" id="L144">        u.setNombre(req.getNombre().trim());</span>
+<span class="fc" id="L145">        Usuario guardado = repo.save(u);</span>
+<span class="fc" id="L146">        return mapToPublicDto(guardado);</span>
+    }
+
+    // ── Admin: listar todos los usuarios ──────────────────────
+    public List&lt;UserPublicDto&gt; listarUsuarios() {
+<span class="fc" id="L151">        return repo.findAll().stream()</span>
+<span class="fc" id="L152">                .map(this::mapToPublicDto)</span>
+<span class="fc" id="L153">                .collect(Collectors.toList());</span>
+    }
+
+    // ── Admin: cambiar rol ─────────────────────────────────────
+    public UserPublicDto cambiarRol(String idAdmin, String idUsuario, Rol nuevoRol) {
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        if (idAdmin.equals(idUsuario)) {</span>
+<span class="fc" id="L159">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;No puedes cambiar tu propio rol&quot;);</span>
+        }
+
+<span class="nc" id="L162">        Usuario u = repo.findById(idUsuario)</span>
+<span class="nc" id="L163">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Usuario no encontrado&quot;));</span>
+
+<span class="nc" id="L165">        u.setRol(nuevoRol);</span>
+<span class="nc" id="L166">        Usuario guardado = repo.save(u);</span>
+<span class="nc" id="L167">        return mapToPublicDto(guardado);</span>
+    }
+
+    // ── Admin: activar/desactivar usuario ─────────────────────
+    public UserPublicDto toggleActivo(String idAdmin, String idUsuario) {
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (idAdmin.equals(idUsuario)) {</span>
+<span class="fc" id="L173">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;No puedes desactivar tu propia cuenta&quot;);</span>
+        }
+
+<span class="fc" id="L176">        Usuario u = repo.findById(idUsuario)</span>
+<span class="pc" id="L177">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Usuario no encontrado&quot;));</span>
+
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">        u.setActivo(!u.getActivo());</span>
+<span class="fc" id="L180">        Usuario guardado = repo.save(u);</span>
+<span class="fc" id="L181">        return mapToPublicDto(guardado);</span>
+    }
+
+    // ── Admin: estadísticas ────────────────────────────────────
+    public Map&lt;String, Object&gt; getEstadisticas() {
+<span class="nc" id="L186">        List&lt;Object[]&gt; counts = repo.countByRol();</span>
+<span class="nc" id="L187">        long total = 0;</span>
+<span class="nc" id="L188">        List&lt;Map&lt;String, Object&gt;&gt; porRol = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">        for (Object[] row : counts) {</span>
+<span class="nc" id="L191">            Rol rol = (Rol) row[0];</span>
+<span class="nc" id="L192">            long count = (long) row[1];</span>
+<span class="nc" id="L193">            total += count;</span>
+
+<span class="nc" id="L195">            Map&lt;String, Object&gt; rMap = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L196">            rMap.put(&quot;rol&quot;, rol.name());</span>
+<span class="nc" id="L197">            rMap.put(&quot;total&quot;, count);</span>
+<span class="nc" id="L198">            porRol.add(rMap);</span>
+        }
+
+<span class="nc" id="L201">        Map&lt;String, Object&gt; stats = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L202">        stats.put(&quot;total&quot;, total);</span>
+<span class="nc" id="L203">        stats.put(&quot;por_rol&quot;, porRol);</span>
+<span class="nc" id="L204">        return stats;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

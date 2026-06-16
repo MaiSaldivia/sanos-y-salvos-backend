@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MascotaResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-gestion-mascotas</a> &gt; <a href="index.source.html" class="el_package">com.sanosysalvos.mascotas.dto</a> &gt; <span class="el_source">MascotaResponse.java</span></div><h1>MascotaResponse.java</h1><pre class="source lang-java linenums">package com.sanosysalvos.mascotas.dto;
+
+import com.sanosysalvos.mascotas.model.EstadoMascota;
+import com.sanosysalvos.mascotas.model.Mascota;
+import com.sanosysalvos.mascotas.model.TamanoMascota;
+import lombok.Data;
+import java.time.LocalDateTime;
+
+@Data
+public class MascotaResponse {
+
+    private String idMascota;
+    private String tipoAnimal;
+    private String raza;
+    private String nombre;
+    private String colorPrimario;
+    private TamanoMascota tamano;
+    private String sexo;
+    private String edad;
+    private String fotoUrl;
+    private Double latitud;
+    private Double longitud;
+    private String sector;
+    private String comuna;
+    private String direccion;
+    private LocalDateTime fechaReporte;
+    private EstadoMascota estado;
+    private String descripcion;
+    private String contacto;
+    private String telefono;
+    private String idUsuario;
+
+<span class="fc" id="L33">    public MascotaResponse(Mascota mascota) {</span>
+<span class="fc" id="L34">        this.idMascota = mascota.getIdMascota();</span>
+<span class="fc" id="L35">        this.tipoAnimal = mascota.getTipoAnimal();</span>
+<span class="fc" id="L36">        this.raza = mascota.getRaza();</span>
+<span class="fc" id="L37">        this.nombre = mascota.getNombre();</span>
+<span class="fc" id="L38">        this.colorPrimario = mascota.getColorPrimario();</span>
+<span class="fc" id="L39">        this.tamano = mascota.getTamano();</span>
+<span class="fc" id="L40">        this.sexo = mascota.getSexo();</span>
+<span class="fc" id="L41">        this.edad = mascota.getEdad();</span>
+<span class="fc" id="L42">        this.fotoUrl = mascota.getFotoUrl();</span>
+<span class="fc" id="L43">        this.latitud = mascota.getLatitud();</span>
+<span class="fc" id="L44">        this.longitud = mascota.getLongitud();</span>
+<span class="fc" id="L45">        this.sector = mascota.getSector();</span>
+<span class="fc" id="L46">        this.comuna = mascota.getComuna();</span>
+<span class="fc" id="L47">        this.direccion = mascota.getDireccion();</span>
+<span class="fc" id="L48">        this.fechaReporte = mascota.getFechaReporte();</span>
+<span class="fc" id="L49">        this.estado = mascota.getEstado();</span>
+<span class="fc" id="L50">        this.descripcion = mascota.getDescripcion();</span>
+<span class="fc" id="L51">        this.contacto = mascota.getContacto();</span>
+<span class="fc" id="L52">        this.telefono = mascota.getTelefono();</span>
+<span class="fc" id="L53">        this.idUsuario = mascota.getIdUsuario();</span>
+<span class="fc" id="L54">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

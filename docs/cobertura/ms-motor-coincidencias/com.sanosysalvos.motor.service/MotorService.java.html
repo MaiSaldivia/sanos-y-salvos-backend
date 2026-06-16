@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MotorService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-motor-coincidencias</a> &gt; <a href="index.source.html" class="el_package">com.sanosysalvos.motor.service</a> &gt; <span class="el_source">MotorService.java</span></div><h1>MotorService.java</h1><pre class="source lang-java linenums">package com.sanosysalvos.motor.service;
+
+import com.sanosysalvos.motor.dto.BusquedaResultDto;
+import com.sanosysalvos.motor.dto.CandidatoDto;
+import com.sanosysalvos.motor.dto.HistorialDto;
+import com.sanosysalvos.motor.dto.ResumenDto;
+import com.sanosysalvos.motor.model.Coincidencia;
+import com.sanosysalvos.motor.model.Mascota;
+import com.sanosysalvos.motor.pattern.ScoringAlgorithm;
+import com.sanosysalvos.motor.repository.MascotaRepository;
+import com.sanosysalvos.motor.repository.MotorRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class MotorService {
+
+    private final MotorRepository motorRepository;
+    private final MascotaRepository mascotaRepository;
+    private final ScoringAlgorithm scoringAlgorithm;
+
+    @Transactional
+    public BusquedaResultDto buscarCoincidencias(String idMascota, Double maxKmParam, Integer minScoreParam, Integer limiteParam) {
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        double maxKm = maxKmParam != null ? maxKmParam : 20.0;</span>
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">        int minScore = minScoreParam != null ? minScoreParam : 30;</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        int limite = limiteParam != null ? limiteParam : 10;</span>
+
+<span class="fc" id="L39">        Mascota origen = mascotaRepository.findById(idMascota)</span>
+<span class="fc" id="L40">                .orElseThrow(() -&gt; new RuntimeException(&quot;Mascota no encontrada&quot;));</span>
+
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">        String estadoBuscar = &quot;PERDIDA&quot;.equals(origen.getEstado()) ? &quot;ENCONTRADA&quot; : &quot;PERDIDA&quot;;</span>
+
+<span class="fc" id="L44">        List&lt;Mascota&gt; candidatos = mascotaRepository.findByEstadoAndIdMascotaNot(estadoBuscar, idMascota);</span>
+
+<span class="fc" id="L46">        List&lt;CandidatoDto&gt; resultados = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        for (Mascota c : candidatos) {</span>
+<span class="fc" id="L48">            int score = scoringAlgorithm.calcularScore(origen, c);</span>
+<span class="fc" id="L49">            double km = scoringAlgorithm.distanciaKm(origen.getLatitud(), origen.getLongitud(), c.getLatitud(), c.getLongitud());</span>
+            
+<span class="fc bfc" id="L51" title="All 4 branches covered.">            if (score &gt;= minScore &amp;&amp; km &lt;= maxKm) {</span>
+<span class="fc" id="L52">                BigDecimal bd = new BigDecimal(Double.toString(km));</span>
+<span class="fc" id="L53">                bd = bd.setScale(2, RoundingMode.HALF_UP);</span>
+<span class="fc" id="L54">                double roundedKm = bd.doubleValue();</span>
+                
+<span class="fc" id="L56">                resultados.add(new CandidatoDto(c, score, roundedKm));</span>
+            }
+        }
+
+<span class="fc" id="L60">        resultados.sort((a, b) -&gt; {</span>
+<span class="fc" id="L61">            int scoreCompare = b.getScore().compareTo(a.getScore());</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            if (scoreCompare != 0) return scoreCompare;</span>
+<span class="fc" id="L63">            return a.getDistanciaKm().compareTo(b.getDistanciaKm());</span>
+        });
+
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (resultados.size() &gt; limite) {</span>
+<span class="fc" id="L67">            resultados = resultados.subList(0, limite);</span>
+        }
+
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        for (CandidatoDto r : resultados) {</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">            if (r.getScore() &gt;= 60) {</span>
+<span class="fc" id="L72">                guardarCoincidencia(idMascota, r.getMascota().getIdMascota(), r.getScore(), r.getDistanciaKm());</span>
+            }
+        }
+
+<span class="fc" id="L76">        return new BusquedaResultDto(origen, resultados.size(), resultados);</span>
+    }
+
+    private void guardarCoincidencia(String idA, String idB, int score, double km) {
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        String keyA = idA.compareTo(idB) &lt; 0 ? idA : idB;</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        String keyB = idA.compareTo(idB) &lt; 0 ? idB : idA;</span>
+
+<span class="fc" id="L83">        motorRepository.findByIdMascotaAAndIdMascotaB(keyA, keyB).ifPresentOrElse(</span>
+<span class="fc" id="L84">                c -&gt; {</span>
+                    // Ya existe, se podría actualizar si cambia el score
+<span class="fc" id="L86">                },</span>
+<span class="fc" id="L87">                () -&gt; {</span>
+<span class="fc" id="L88">                    Coincidencia c = Coincidencia.builder()</span>
+<span class="fc" id="L89">                            .idCoincidencia(UUID.randomUUID().toString())</span>
+<span class="fc" id="L90">                            .idMascotaA(keyA)</span>
+<span class="fc" id="L91">                            .idMascotaB(keyB)</span>
+<span class="fc" id="L92">                            .score(score)</span>
+<span class="fc" id="L93">                            .distanciaKm(km)</span>
+<span class="fc" id="L94">                            .notificado(false)</span>
+<span class="fc" id="L95">                            .createdAt(LocalDateTime.now())</span>
+<span class="fc" id="L96">                            .build();</span>
+<span class="fc" id="L97">                    motorRepository.save(c);</span>
+<span class="fc" id="L98">                }</span>
+        );
+<span class="fc" id="L100">    }</span>
+
+    public List&lt;HistorialDto&gt; getHistorial(Integer limite) {
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        int lim = (limite != null) ? Math.min(limite, 100) : 20;</span>
+<span class="nc" id="L104">        List&lt;Object[]&gt; rows = motorRepository.getHistorial(lim);</span>
+<span class="nc" id="L105">        return rows.stream().map(row -&gt; {</span>
+<span class="nc" id="L106">            String idCoincidencia = (String) row[0];</span>
+<span class="nc" id="L107">            Integer score = (Integer) row[1];</span>
+<span class="nc" id="L108">            Double distanciaKm = (Double) row[2];</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">            Boolean notificado = (row[3] instanceof Boolean) ? (Boolean) row[3] : ((Number) row[3]).intValue() != 0;</span>
+<span class="nc" id="L110">            LocalDateTime createdAt = ((Timestamp) row[4]).toLocalDateTime();</span>
+<span class="nc" id="L111">            String idA = (String) row[5];</span>
+<span class="nc" id="L112">            String nombreA = (String) row[6];</span>
+<span class="nc" id="L113">            String estadoA = (String) row[7];</span>
+<span class="nc" id="L114">            String tipoA = (String) row[8];</span>
+<span class="nc" id="L115">            String idB = (String) row[9];</span>
+<span class="nc" id="L116">            String nombreB = (String) row[10];</span>
+<span class="nc" id="L117">            String estadoB = (String) row[11];</span>
+<span class="nc" id="L118">            String tipoB = (String) row[12];</span>
+            
+<span class="nc" id="L120">            return new HistorialDto(idCoincidencia, score, distanciaKm, notificado, createdAt,</span>
+<span class="nc" id="L121">                    idA, nombreA, estadoA, tipoA, idB, nombreB, estadoB, tipoB);</span>
+<span class="nc" id="L122">        }).collect(Collectors.toList());</span>
+    }
+
+    public ResumenDto getResumen() {
+<span class="fc" id="L126">        Long total = motorRepository.countTotalProcesadas();</span>
+<span class="fc" id="L127">        Long altas = motorRepository.countAltas();</span>
+<span class="fc" id="L128">        Long medias = motorRepository.countMedias();</span>
+<span class="fc" id="L129">        Long recientes = motorRepository.countUltimaSemana();</span>
+<span class="fc" id="L130">        return new ResumenDto(total, altas, medias, recientes);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

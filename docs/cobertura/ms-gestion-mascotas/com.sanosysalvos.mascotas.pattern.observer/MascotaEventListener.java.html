@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MascotaEventListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-gestion-mascotas</a> &gt; <a href="index.source.html" class="el_package">com.sanosysalvos.mascotas.pattern.observer</a> &gt; <span class="el_source">MascotaEventListener.java</span></div><h1>MascotaEventListener.java</h1><pre class="source lang-java linenums">package com.sanosysalvos.mascotas.pattern.observer;
+
+import com.sanosysalvos.mascotas.model.Mascota;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
+@Component
+<span class="nc" id="L8">public class MascotaEventListener {</span>
+
+    @EventListener
+    public void alReportarMascota(MascotaReportadaEvent event) {
+<span class="nc" id="L12">        Mascota m = event.getMascota();</span>
+<span class="nc" id="L13">        System.out.println(String.format(&quot;[OBSERVER][NUEVO REPORTE] %s: \&quot;%s\&quot; en %s&quot;, </span>
+<span class="nc" id="L14">                m.getEstado(), m.getNombre(), m.getSector()));</span>
+<span class="nc" id="L15">    }</span>
+
+    @EventListener
+    public void alCambiarEstado(MascotaEstadoCambiadoEvent event) {
+<span class="nc" id="L19">        System.out.println(String.format(&quot;[OBSERVER][ESTADO] Mascota %s: %s → %s&quot;, </span>
+<span class="nc" id="L20">                event.getIdMascota(), event.getEstadoAnterior(), event.getEstadoNuevo()));</span>
+<span class="nc" id="L21">    }</span>
+
+    @EventListener
+    public void alReunificarMascota(MascotaReunificadaEvent event) {
+<span class="nc" id="L25">        Mascota m = event.getMascota();</span>
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        String identifier = m.getNombre() != null ? m.getNombre() : m.getIdMascota();</span>
+<span class="nc" id="L27">        System.out.println(String.format(&quot;[OBSERVER][REUNION] Mascota \&quot;%s\&quot; reunificada con su dueño. ✅&quot;, identifier));</span>
+<span class="nc" id="L28">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

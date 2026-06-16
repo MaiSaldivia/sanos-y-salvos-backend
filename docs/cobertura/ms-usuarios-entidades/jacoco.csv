@@ -1,0 +1,11 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+ms-usuarios-entidades,com.sanosysalvos.usuarios.config,JwtUtil,102,0,6,0,27,0,8,0,5,0
+ms-usuarios-entidades,com.sanosysalvos.usuarios.config,WebMvcConfig,16,0,0,0,4,0,2,0,2,0
+ms-usuarios-entidades,com.sanosysalvos.usuarios.config,JwtInterceptor,230,0,36,0,57,0,22,0,4,0
+ms-usuarios-entidades,com.sanosysalvos.usuarios.controller,HealthController,27,0,0,0,6,0,2,0,2,0
+ms-usuarios-entidades,com.sanosysalvos.usuarios.controller,AuthController,140,0,0,0,24,0,12,0,12,0
+ms-usuarios-entidades,com.sanosysalvos.usuarios.model,Rol,25,184,8,0,3,10,7,3,3,3
+ms-usuarios-entidades,com.sanosysalvos.usuarios.model,Usuario,20,0,6,0,7,0,4,0,1,0
+ms-usuarios-entidades,com.sanosysalvos.usuarios.service,AuthService,140,398,16,36,23,81,20,24,5,13
+ms-usuarios-entidades,com.sanosysalvos.usuarios.dto,ResponseWrapper,43,0,0,0,18,0,4,0,4,0
+ms-usuarios-entidades,com.sanosysalvos.usuarios,UsuariosApplication,8,0,0,0,3,0,2,0,2,0

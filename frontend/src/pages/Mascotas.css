@@ -1,0 +1,63 @@
+.mascotas-page {
+  padding: 48px 0 80px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.page-title {
+  font-size: 2rem;
+  color: var(--charcoal);
+}
+
+.page-sub {
+  color: var(--stone-light);
+  font-size: 0.92rem;
+  margin-top: 4px;
+}
+
+.filters-bar {
+  background: var(--warm-white);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 32px;
+  box-shadow: var(--shadow-sm);
+}
+
+.filters-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-select {
+  min-width: 170px;
+  flex: 1;
+}
+
+.filter-input {
+  min-width: 200px;
+  flex: 2;
+}
+
+/* Animación al cargar las cards */
+.mascotas-grid .card {
+  animation: fadeUp 0.35s ease backwards;
+}
+.mascotas-grid .card:nth-child(1) { animation-delay: 0.05s; }
+.mascotas-grid .card:nth-child(2) { animation-delay: 0.10s; }
+.mascotas-grid .card:nth-child(3) { animation-delay: 0.15s; }
+.mascotas-grid .card:nth-child(4) { animation-delay: 0.20s; }
+.mascotas-grid .card:nth-child(5) { animation-delay: 0.25s; }
+.mascotas-grid .card:nth-child(6) { animation-delay: 0.30s; }
+
+@media (max-width: 600px) {
+  .mascotas-page { padding: 32px 0 60px; }
+  .filter-select, .filter-input { min-width: 100%; }
+}

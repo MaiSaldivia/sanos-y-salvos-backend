@@ -1,0 +1,234 @@
+/* ══════════════════════════════════════════
+   DETALLE MASCOTA
+   ══════════════════════════════════════════ */
+.detalle-page {
+  padding: 40px 0 90px;
+}
+
+.back-btn {
+  margin-bottom: 28px;
+}
+
+.detalle-grid {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 52px;
+  margin-bottom: 64px;
+}
+
+/* Foto */
+.detalle-foto-wrap {
+  position: relative;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  height: 480px;
+  background: var(--stone-pale);
+  box-shadow: var(--shadow-lg);
+}
+
+.detalle-foto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease);
+}
+.detalle-foto-wrap:hover .detalle-foto { transform: scale(1.03); }
+
+.detalle-estado {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  font-size: 0.82rem;
+  padding: 6px 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+
+/* Info */
+.detalle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding-top: 6px;
+}
+
+.detalle-top {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.detalle-nombre {
+  font-size: 2.5rem;
+  color: var(--charcoal);
+}
+
+.detalle-tipo {
+  font-size: 0.88rem;
+  color: var(--stone);
+  background: var(--stone-pale);
+  padding: 5px 16px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+}
+
+/* Atributos en tabla */
+.detalle-attrs {
+  border: 1.5px solid var(--sand);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+
+.attr-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--sand);
+  font-size: 0.92rem;
+  transition: background var(--transition);
+}
+.attr-row:last-child { border-bottom: none; }
+.attr-row:hover { background: var(--calypso-xpale); }
+
+.attr-label { color: var(--stone-light); font-weight: 500; }
+.attr-value { color: var(--charcoal); font-weight: 600; text-align: right; }
+
+/* Descripción */
+.detalle-desc-box {
+  background: linear-gradient(135deg, var(--calypso-xpale), var(--stone-pale));
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+  border: 1px solid var(--calypso-pale);
+}
+
+.detalle-desc-box h3 {
+  font-size: 0.80rem;
+  font-weight: 700;
+  color: var(--calypso);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  font-family: var(--font-body);
+}
+
+.detalle-desc-box p {
+  font-size: 0.95rem;
+  color: var(--stone);
+  line-height: 1.65;
+}
+
+/* Contacto */
+.detalle-contacto h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--stone);
+  margin-bottom: 12px;
+  font-family: var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.contacto-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contacto-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 18px;
+  background: var(--warm-white);
+  border: 1.5px solid var(--sand);
+  border-radius: var(--radius-md);
+  font-size: 0.92rem;
+  color: var(--charcoal);
+  text-decoration: none;
+  transition: all var(--transition);
+  font-weight: 500;
+}
+.contacto-item:hover {
+  border-color: var(--calypso);
+  color: var(--calypso);
+  background: var(--calypso-xpale);
+  transform: translateX(4px);
+}
+
+.detalle-coords {
+  font-size: 0.78rem;
+  color: var(--stone-light);
+}
+
+/* Coincidencias */
+.coincidencias-section {
+  border-top: 1.5px solid var(--sand);
+  padding-top: 44px;
+}
+
+.coincidencias-title {
+  font-size: 1.3rem;
+  margin-bottom: 26px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--charcoal);
+}
+
+.coincidencias-badge {
+  background: linear-gradient(135deg, var(--calypso), var(--calypso-mid));
+  color: white;
+  font-size: 0.73rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  padding: 3px 11px;
+  border-radius: var(--radius-full);
+}
+
+.coincidencias-grid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.coincidencia-card {
+  background: var(--warm-white);
+  border: 1.5px solid var(--sand);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  width: 165px;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+.coincidencia-card:hover {
+  border-color: var(--calypso);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.coincidencia-card img {
+  width: 100%;
+  height: 115px;
+  object-fit: cover;
+  transition: transform 0.4s var(--ease);
+}
+.coincidencia-card:hover img { transform: scale(1.06); }
+
+.coin-info {
+  padding: 10px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.coin-nombre { font-weight: 700; font-size: 0.90rem; color: var(--charcoal); }
+.coin-score  { font-size: 0.77rem; color: var(--calypso); font-weight: 700; }
+.coin-dist   { font-size: 0.73rem; color: var(--stone-light); }
+
+@media (max-width: 900px) {
+  .detalle-grid { grid-template-columns: 1fr; gap: 28px; }
+  .detalle-foto-wrap { height: 320px; }
+}

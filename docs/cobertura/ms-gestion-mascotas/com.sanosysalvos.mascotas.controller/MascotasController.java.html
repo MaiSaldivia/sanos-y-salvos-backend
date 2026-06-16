@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MascotasController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-gestion-mascotas</a> &gt; <a href="index.source.html" class="el_package">com.sanosysalvos.mascotas.controller</a> &gt; <span class="el_source">MascotasController.java</span></div><h1>MascotasController.java</h1><pre class="source lang-java linenums">package com.sanosysalvos.mascotas.controller;
+
+import com.sanosysalvos.mascotas.config.RequireAuth;
+import com.sanosysalvos.mascotas.dto.MascotaRequest;
+import com.sanosysalvos.mascotas.dto.MascotaResponse;
+import com.sanosysalvos.mascotas.service.MascotasService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping(&quot;/api/mascotas&quot;)
+@RequiredArgsConstructor
+public class MascotasController {
+
+    private final MascotasService mascotasService;
+
+    // Handler de errores de validación — devuelve mensajes legibles al frontend
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; handleValidation(MethodArgumentNotValidException ex) {
+<span class="nc" id="L30">        Map&lt;String, String&gt; fieldErrors = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">        for (FieldError fe : ex.getBindingResult().getFieldErrors()) {</span>
+<span class="nc" id="L32">            fieldErrors.put(fe.getField(), fe.getDefaultMessage());</span>
+<span class="nc" id="L33">        }</span>
+<span class="nc" id="L34">        Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L35">        body.put(&quot;message&quot;, &quot;Datos inválidos: &quot; + fieldErrors.values().stream().findFirst().orElse(&quot;revisa el formulario&quot;));</span>
+<span class="nc" id="L36">        body.put(&quot;errors&quot;, fieldErrors);</span>
+<span class="nc" id="L37">        return ResponseEntity.badRequest().body(body);</span>
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; handleRuntime(RuntimeException ex) {
+<span class="nc" id="L42">        return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L43">                .body(Map.of(&quot;message&quot;, ex.getMessage()));</span>
+    }
+
+    @GetMapping
+    public ResponseEntity&lt;List&lt;MascotaResponse&gt;&gt; obtenerTodas() {
+<span class="nc" id="L48">        return ResponseEntity.ok(mascotasService.obtenerTodas());</span>
+    }
+
+    // Alias que usa el frontend: /api/mascotas/busqueda — con filtros opcionales
+    @GetMapping(&quot;/busqueda&quot;)
+    public ResponseEntity&lt;List&lt;MascotaResponse&gt;&gt; busqueda(
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) String tipo_animal,
+            @RequestParam(required = false) String tamano,
+            @RequestParam(required = false) String raza) {
+<span class="nc" id="L58">        return ResponseEntity.ok(mascotasService.buscarConFiltros(estado, tipo_animal, tamano, raza));</span>
+    }
+
+    @GetMapping(&quot;/estadisticas&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; getEstadisticas() {
+<span class="nc" id="L63">        return ResponseEntity.ok(mascotasService.getEstadisticas());</span>
+    }
+
+    @RequireAuth
+    @GetMapping(&quot;/usuario/mis-reportes&quot;)
+    public ResponseEntity&lt;List&lt;MascotaResponse&gt;&gt; getMisMascotas(HttpServletRequest httpRequest) {
+<span class="nc" id="L69">        String userId = (String) httpRequest.getAttribute(&quot;userId&quot;);</span>
+<span class="nc" id="L70">        return ResponseEntity.ok(mascotasService.obtenerPorUsuario(userId));</span>
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;MascotaResponse&gt; obtenerPorId(@PathVariable String id) {
+<span class="nc" id="L75">        return ResponseEntity.ok(mascotasService.obtenerPorId(id));</span>
+    }
+
+    @RequireAuth
+    @PostMapping
+    public ResponseEntity&lt;MascotaResponse&gt; registrarMascota(
+            @Valid @RequestBody MascotaRequest request,
+            HttpServletRequest httpRequest) {
+<span class="nc" id="L83">        String userId = (String) httpRequest.getAttribute(&quot;userId&quot;);</span>
+<span class="nc" id="L84">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="nc" id="L85">                .body(mascotasService.registrarMascota(request, userId));</span>
+    }
+
+    // Alias que usa el frontend: POST /api/mascotas/reportar
+    @RequireAuth
+    @PostMapping(&quot;/reportar&quot;)
+    public ResponseEntity&lt;MascotaResponse&gt; reportarMascota(
+            @Valid @RequestBody MascotaRequest request,
+            HttpServletRequest httpRequest) {
+<span class="nc" id="L94">        String userId = (String) httpRequest.getAttribute(&quot;userId&quot;);</span>
+<span class="nc" id="L95">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="nc" id="L96">                .body(mascotasService.registrarMascota(request, userId));</span>
+    }
+
+    @RequireAuth
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;MascotaResponse&gt; actualizarMascota(
+            @PathVariable String id,
+            @Valid @RequestBody MascotaRequest request,
+            HttpServletRequest httpRequest) {
+<span class="nc" id="L105">        String userId = (String) httpRequest.getAttribute(&quot;userId&quot;);</span>
+<span class="nc" id="L106">        return ResponseEntity.ok(mascotasService.actualizarMascota(id, request, userId));</span>
+    }
+
+    @RequireAuth
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; eliminarMascota(
+            @PathVariable String id,
+            HttpServletRequest httpRequest) {
+<span class="nc" id="L114">        String userId = (String) httpRequest.getAttribute(&quot;userId&quot;);</span>
+<span class="nc" id="L115">        mascotasService.eliminarMascota(id, userId);</span>
+<span class="nc" id="L116">        return ResponseEntity.noContent().build();</span>
+    }
+
+    // ── Reportes de encuentro ───────────────────────────────────────────────
+
+    @RequireAuth
+    @PostMapping(&quot;/{id}/reportar-encuentro&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; reportarEncuentro(
+            @PathVariable String id,
+            @RequestBody Map&lt;String, Object&gt; body,
+            HttpServletRequest httpRequest) {
+<span class="nc" id="L127">        mascotasService.reportarEncuentro(id, body);</span>
+<span class="nc" id="L128">        return ResponseEntity.ok(Map.of(&quot;message&quot;, &quot;Solicitud enviada a revisión&quot;));</span>
+    }
+
+    @GetMapping(&quot;/encuentros/revision&quot;)
+    public ResponseEntity&lt;List&lt;Map&lt;String, Object&gt;&gt;&gt; getEncuentrosRevision() {
+<span class="nc" id="L133">        return ResponseEntity.ok(mascotasService.getEncuentrosRevision());</span>
+    }
+
+    @RequireAuth
+    @PutMapping(&quot;/encuentros/revision/{id}&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; revisarEncuentro(
+            @PathVariable String id,
+            @RequestBody Map&lt;String, String&gt; body) {
+<span class="nc" id="L141">        String accion = body.get(&quot;accion&quot;);</span>
+<span class="nc" id="L142">        mascotasService.revisarEncuentro(id, accion);</span>
+<span class="nc" id="L143">        return ResponseEntity.ok(Map.of(&quot;message&quot;, &quot;Revisión procesada correctamente&quot;));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

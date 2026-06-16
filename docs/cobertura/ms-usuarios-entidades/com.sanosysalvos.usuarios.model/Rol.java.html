@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Rol.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-usuarios-entidades</a> &gt; <a href="index.source.html" class="el_package">com.sanosysalvos.usuarios.model</a> &gt; <span class="el_source">Rol.java</span></div><h1>Rol.java</h1><pre class="source lang-java linenums">package com.sanosysalvos.usuarios.model;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+<span class="fc" id="L7">public enum Rol {</span>
+<span class="fc" id="L8">    DUENO(Arrays.asList(&quot;reportar&quot;, &quot;ver_mascotas&quot;, &quot;reportar_encuentro&quot;)),</span>
+<span class="fc" id="L9">    VETERINARIA(Arrays.asList(&quot;reportar&quot;, &quot;ver_mascotas&quot;, &quot;reportar_encuentro&quot;, &quot;ver_historial&quot;)),</span>
+<span class="fc" id="L10">    REFUGIO(Arrays.asList(&quot;reportar&quot;, &quot;ver_mascotas&quot;, &quot;reportar_encuentro&quot;, &quot;revisar_encuentros&quot;, &quot;ver_estadisticas&quot;)),</span>
+<span class="fc" id="L11">    MUNICIPALIDAD(Arrays.asList(&quot;reportar&quot;, &quot;ver_mascotas&quot;, &quot;reportar_encuentro&quot;, &quot;revisar_encuentros&quot;, &quot;ver_estadisticas&quot;, &quot;ver_zonas&quot;)),</span>
+<span class="fc" id="L12">    ADMIN(Arrays.asList(&quot;reportar&quot;, &quot;ver_mascotas&quot;, &quot;reportar_encuentro&quot;, &quot;revisar_encuentros&quot;, &quot;ver_estadisticas&quot;, &quot;ver_zonas&quot;, &quot;gestionar_usuarios&quot;, &quot;cambiar_roles&quot;));</span>
+
+    private final List&lt;String&gt; permisos;
+
+<span class="fc" id="L16">    Rol(List&lt;String&gt; permisos) {</span>
+<span class="fc" id="L17">        this.permisos = permisos;</span>
+<span class="fc" id="L18">    }</span>
+
+    public List&lt;String&gt; getPermisos() {
+<span class="fc" id="L21">        return permisos;</span>
+    }
+
+    public boolean puedeHacer(String permiso) {
+<span class="nc" id="L25">        return permisos.contains(permiso);</span>
+    }
+
+    public boolean esModerador() {
+<span class="nc bnc" id="L29" title="All 6 branches missed.">        return this == REFUGIO || this == MUNICIPALIDAD || this == ADMIN;</span>
+    }
+
+    public boolean esAdmin() {
+<span class="nc bnc" id="L33" title="All 2 branches missed.">        return this == ADMIN;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtInterceptor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-gestion-mascotas</a> &gt; <a href="index.source.html" class="el_package">com.sanosysalvos.mascotas.config</a> &gt; <span class="el_source">JwtInterceptor.java</span></div><h1>JwtInterceptor.java</h1><pre class="source lang-java linenums">package com.sanosysalvos.mascotas.config;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+import java.util.Arrays;
+
+@Component
+@RequiredArgsConstructor
+public class JwtInterceptor implements HandlerInterceptor {
+
+    private final JwtUtil jwtUtil;
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+<span class="nc bnc" id="L20" title="All 2 branches missed.">        if (!(handler instanceof HandlerMethod)) {</span>
+<span class="nc" id="L21">            return true;</span>
+        }
+
+<span class="nc" id="L24">        HandlerMethod method = (HandlerMethod) handler;</span>
+<span class="nc" id="L25">        RequireAuth requireAuth = method.getMethodAnnotation(RequireAuth.class);</span>
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        if (requireAuth == null) {</span>
+<span class="nc" id="L27">            requireAuth = method.getBeanType().getAnnotation(RequireAuth.class);</span>
+        }
+
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        if (requireAuth != null) {</span>
+<span class="nc" id="L31">            String token = extractToken(request);</span>
+<span class="nc bnc" id="L32" title="All 4 branches missed.">            if (token == null || !jwtUtil.validarToken(token)) {</span>
+<span class="nc" id="L33">                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);</span>
+<span class="nc" id="L34">                return false;</span>
+            }
+
+<span class="nc" id="L37">            String userId = jwtUtil.extraerUserId(token);</span>
+<span class="nc" id="L38">            String role = jwtUtil.extraerRol(token);</span>
+            
+<span class="nc" id="L40">            request.setAttribute(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L41">            request.setAttribute(&quot;userRole&quot;, role);</span>
+
+<span class="nc" id="L43">            RequireRole requireRole = method.getMethodAnnotation(RequireRole.class);</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">            if (requireRole != null) {</span>
+<span class="nc" id="L45">                com.sanosysalvos.mascotas.model.Rol[] allowedRoles = requireRole.value();</span>
+<span class="nc" id="L46">                boolean hasRole = Arrays.stream(allowedRoles).anyMatch(r -&gt; r.name().equals(role));</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">                if (!hasRole) {</span>
+<span class="nc" id="L48">                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);</span>
+<span class="nc" id="L49">                    return false;</span>
+                }
+            }
+        }
+<span class="nc" id="L53">        return true;</span>
+    }
+
+    private String extractToken(HttpServletRequest request) {
+<span class="nc" id="L57">        String header = request.getHeader(&quot;Authorization&quot;);</span>
+<span class="nc bnc" id="L58" title="All 4 branches missed.">        if (header != null &amp;&amp; header.startsWith(&quot;Bearer &quot;)) {</span>
+<span class="nc" id="L59">            return header.substring(7);</span>
+        }
+<span class="nc" id="L61">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

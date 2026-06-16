@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-gestion-mascotas</a> &gt; <a href="index.source.html" class="el_package">com.sanosysalvos.mascotas.config</a> &gt; <span class="el_source">JwtUtil.java</span></div><h1>JwtUtil.java</h1><pre class="source lang-java linenums">package com.sanosysalvos.mascotas.config;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.util.Date;
+
+@Component
+public class JwtUtil {
+
+    private final Key key;
+
+<span class="nc" id="L17">    public JwtUtil(@Value(&quot;${jwt.secret}&quot;) String secret) {</span>
+<span class="nc" id="L18">        String paddedSecret = (secret + &quot;sanos-y-salvos-secret-2026-padding-key&quot;).substring(0, 32);</span>
+<span class="nc" id="L19">        this.key = Keys.hmacShaKeyFor(paddedSecret.getBytes(StandardCharsets.UTF_8));</span>
+<span class="nc" id="L20">    }</span>
+
+    public Claims extraerClaims(String token) {
+        try {
+<span class="nc" id="L24">            return Jwts.parserBuilder()</span>
+<span class="nc" id="L25">                    .setSigningKey(key)</span>
+<span class="nc" id="L26">                    .build()</span>
+<span class="nc" id="L27">                    .parseClaimsJws(token)</span>
+<span class="nc" id="L28">                    .getBody();</span>
+<span class="nc" id="L29">        } catch (Exception e) {</span>
+<span class="nc" id="L30">            return null;</span>
+        }
+    }
+
+    public boolean validarToken(String token) {
+<span class="nc" id="L35">        Claims claims = extraerClaims(token);</span>
+<span class="nc bnc" id="L36" title="All 4 branches missed.">        return claims != null &amp;&amp; !claims.getExpiration().before(new Date());</span>
+    }
+
+    public String extraerUserId(String token) {
+<span class="nc" id="L40">        Claims claims = extraerClaims(token);</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        return claims != null ? claims.getSubject() : null;</span>
+    }
+
+    public String extraerRol(String token) {
+<span class="nc" id="L45">        Claims claims = extraerClaims(token);</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        return claims != null ? claims.get(&quot;rol&quot;, String.class) : null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

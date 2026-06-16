@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Usuario.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-usuarios-entidades</a> &gt; <a href="index.source.html" class="el_package">com.sanosysalvos.usuarios.model</a> &gt; <span class="el_source">Usuario.java</span></div><h1>Usuario.java</h1><pre class="source lang-java linenums">package com.sanosysalvos.usuarios.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = &quot;usuarios&quot;)
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Usuario {
+
+    @Id
+    @Column(name = &quot;id_usuario&quot;, length = 36)
+    private String idUsuario;
+
+    @Column(nullable = false, length = 120)
+    private String nombre;
+
+    @Column(nullable = false, unique = true, length = 120)
+    private String email;
+
+    @Column(name = &quot;password_hash&quot;, nullable = false, length = 255)
+    private String passwordHash;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private Rol rol;
+
+    @Column(nullable = false)
+    private Boolean activo;
+
+    @Column(name = &quot;created_at&quot;, insertable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        if (activo == null) {</span>
+<span class="nc" id="L44">            activo = true;</span>
+        }
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (rol == null) {</span>
+<span class="nc" id="L47">            rol = Rol.DUENO;</span>
+        }
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        if (createdAt == null) {</span>
+<span class="nc" id="L50">            createdAt = LocalDateTime.now();</span>
+        }
+<span class="nc" id="L52">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

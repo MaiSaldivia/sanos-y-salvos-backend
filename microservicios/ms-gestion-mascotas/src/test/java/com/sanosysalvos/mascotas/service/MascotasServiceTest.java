@@ -2,6 +2,7 @@ package com.sanosysalvos.mascotas.service;
 
 import com.sanosysalvos.mascotas.dto.MascotaRequest;
 import com.sanosysalvos.mascotas.dto.MascotaResponse;
+import com.sanosysalvos.mascotas.dto.ReporteEncuentroRequest;
 import com.sanosysalvos.mascotas.model.EstadoMascota;
 import com.sanosysalvos.mascotas.model.EstadoRevision;
 import com.sanosysalvos.mascotas.model.Mascota;
@@ -22,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -144,7 +146,7 @@ class MascotasServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> mascotasService.obtenerPorId("unknown"));
-        assertEquals("Mascota no encontrada", ex.getMessage());
+        assertTrue(ex.getMessage().contains("Mascota no encontrada"));
     }
 
     @Test
@@ -340,5 +342,148 @@ class MascotasServiceTest {
     void testAlertaFactory_EstadoNull() {
         assertThrows(IllegalArgumentException.class,
                 () -> AlertaFactory.crear(null, mockMascota));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // buscarConFiltros
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("buscarConFiltros → filtra por estado válido correctamente")
+    void testBuscarConFiltros_EstadoValido() {
+        when(mascotaRepository.findWithFilters(EstadoMascota.PERDIDA, null, null, null))
+                .thenReturn(List.of(mockMascota));
+
+        List<MascotaResponse> lista = mascotasService.buscarConFiltros("PERDIDA", null, null, null);
+
+        assertEquals(1, lista.size());
+        assertEquals(EstadoMascota.PERDIDA, lista.get(0).getEstado());
+    }
+
+    @Test
+    @DisplayName("buscarConFiltros → filtra por tipo animal y raza")
+    void testBuscarConFiltros_TipoYRaza() {
+        when(mascotaRepository.findWithFilters(null, "Perro", null, "Labrador"))
+                .thenReturn(List.of(mockMascota));
+
+        List<MascotaResponse> lista = mascotasService.buscarConFiltros(null, "Perro", null, "Labrador");
+
+        assertEquals(1, lista.size());
+        assertEquals("Firulais", lista.get(0).getNombre());
+    }
+
+    @Test
+    @DisplayName("buscarConFiltros → sin filtros retorna todas")
+    void testBuscarConFiltros_SinFiltros() {
+        when(mascotaRepository.findWithFilters(null, null, null, null))
+                .thenReturn(Arrays.asList(mockMascota, mockMascotaEncontrada));
+
+        List<MascotaResponse> lista = mascotasService.buscarConFiltros(null, null, null, null);
+
+        assertEquals(2, lista.size());
+    }
+
+    @Test
+    @DisplayName("buscarConFiltros → estado inválido lanza 400")
+    void testBuscarConFiltros_EstadoInvalido() {
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> mascotasService.buscarConFiltros("INVALIDO", null, null, null));
+
+        assertEquals(400, ex.getStatusCode().value());
+        assertTrue(ex.getReason().contains("Estado inválido"));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // actualizarMascota con rol moderador
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("actualizarMascota → moderador ADMIN puede editar mascota ajena")
+    void testActualizarMascota_Moderador() {
+        MascotaRequest req = new MascotaRequest();
+        req.setTipoAnimal("Perro");
+        req.setEstado(EstadoMascota.REUNIFICADA);
+
+        when(mascotaRepository.findById("mascota-123")).thenReturn(Optional.of(mockMascota));
+        when(mascotaRepository.save(any(Mascota.class))).thenReturn(mockMascota);
+
+        // userId|rol — moderador con distinto idUsuario
+        MascotaResponse res = mascotasService.actualizarMascota("mascota-123", req, "otro-user|ADMIN");
+
+        assertNotNull(res);
+        verify(mascotaRepository, times(1)).save(any(Mascota.class));
+    }
+
+    @Test
+    @DisplayName("actualizarMascota → lanza 404 si la mascota no existe")
+    void testActualizarMascota_NotFound() {
+        MascotaRequest req = new MascotaRequest();
+        req.setTipoAnimal("Perro");
+        req.setEstado(EstadoMascota.PERDIDA);
+
+        when(mascotaRepository.findById("no-existe")).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> mascotasService.actualizarMascota("no-existe", req, "user-123"));
+
+        assertTrue(ex.getMessage().contains("Mascota no encontrada"));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // eliminarMascota con moderador
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("eliminarMascota → moderador ADMIN puede eliminar mascota ajena")
+    void testEliminarMascota_Moderador() {
+        when(mascotaRepository.findById("mascota-123")).thenReturn(Optional.of(mockMascota));
+        doNothing().when(mascotaRepository).delete(mockMascota);
+
+        assertDoesNotThrow(() -> mascotasService.eliminarMascota("mascota-123", "otro-user|ADMIN"));
+        verify(mascotaRepository, times(1)).delete(mockMascota);
+    }
+
+    @Test
+    @DisplayName("eliminarMascota → lanza 404 si la mascota no existe")
+    void testEliminarMascota_NotFound() {
+        when(mascotaRepository.findById("no-existe")).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> mascotasService.eliminarMascota("no-existe", "user-123"));
+
+        assertTrue(ex.getMessage().contains("Mascota no encontrada"));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // reportarEncuentro — mascota no encontrada
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("reportarEncuentro → lanza 404 si la mascota no existe")
+    void testReportarEncuentro_MascotaNoExiste() {
+        when(mascotaRepository.findById("no-existe")).thenReturn(Optional.empty());
+
+        ReporteEncuentroRequest request = new ReporteEncuentroRequest(
+                null, "Parque Ecuador", "Juan Pérez", "+56912345678");
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> mascotasService.reportarEncuentro("no-existe", request));
+
+        assertTrue(ex.getMessage().contains("Mascota no encontrada"));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // revisarEncuentro — reporte no encontrado
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("revisarEncuentro → lanza 404 si el reporte no existe")
+    void testRevisarEncuentro_ReporteNoExiste() {
+        when(reporteEncuentroRepository.findById("no-existe")).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> mascotasService.revisarEncuentro("no-existe", "APROBAR"));
+
+        assertTrue(ex.getMessage().contains("Reporte no encontrado"));
     }
 }

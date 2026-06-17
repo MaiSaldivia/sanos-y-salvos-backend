@@ -1,158 +1,354 @@
 {
   "info": {
-    "name": "Sanos y Salvos — API REST",
-    "description": "Colección de endpoints del sistema Sanos y Salvos. Todas las peticiones pasan por el BFF en http://localhost:3005. Los endpoints marcados con 🔒 requieren Bearer Token JWT.",
-    "_postman_id": "sanos-y-salvos-2026",
+    "name": "Sanos y Salvos - API",
+    "description": "Coleccion de endpoints del sistema Sanos y Salvos. Los health checks se hacen directo a cada microservicio. El resto de endpoints usa el BFF en el puerto 3005. Ejecutar Login primero para guardar el token JWT automaticamente.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:3005",
-      "description": "URL base del BFF (API Gateway)"
+      "value": "http://localhost:3005/api",
+      "type": "string"
     },
     {
       "key": "token",
       "value": "",
-      "description": "JWT obtenido tras login. Se setea automáticamente con el script del endpoint Login."
+      "type": "string"
+    },
+    {
+      "key": "mascota_id",
+      "value": "msc-001",
+      "type": "string"
+    },
+    {
+      "key": "usuario_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
     {
-      "name": "Auth — Usuarios",
+      "name": "Health Checks",
       "item": [
         {
-          "name": "Login",
+          "name": "Health - ms-usuarios-entidades",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3004/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3004",
+              "path": ["health"]
+            },
+            "description": "Verifica que ms-usuarios-entidades este corriendo en el puerto 3004. Respuesta esperada: { status: OK }."
+          }
+        },
+        {
+          "name": "Health - ms-gestion-mascotas (via BFF)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3005/api/mascotas/estadisticas",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3005",
+              "path": ["api", "mascotas", "estadisticas"]
+            },
+            "description": "Verifica que el BFF llega a ms-gestion-mascotas. Si responde 200 con totales, ambos estan corriendo."
+          }
+        },
+        {
+          "name": "Health - ms-geolocalizacion (via BFF)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3005/api/geolocalizacion/estadisticas",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3005",
+              "path": ["api", "geolocalizacion", "estadisticas"]
+            },
+            "description": "Verifica que el BFF llega a ms-geolocalizacion. Si responde 200, ambos estan corriendo."
+          }
+        },
+        {
+          "name": "Health - ms-motor-coincidencias (via BFF)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3005/api/motor/resumen",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3005",
+              "path": ["api", "motor", "resumen"]
+            },
+            "description": "Verifica que el BFF llega a ms-motor-coincidencias. Si responde 200, ambos estan corriendo."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login - admin",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json.data && json.data.token) {",
-                  "  pm.collectionVariables.set('token', json.data.token);",
-                  "  console.log('Token guardado automáticamente');",
-                  "}"
-                ]
+                  "var res = pm.response.json();",
+                  "var payload = res.data ? res.data : res;",
+                  "if (payload && payload.token) {",
+                  "    pm.collectionVariables.set('token', payload.token);",
+                  "    pm.collectionVariables.set('usuario_id', payload.usuario ? payload.usuario.idUsuario : '');",
+                  "}",
+                  "pm.test('Login exitoso', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
               }
             }
           ],
           "request": {
             "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": "{{base_url}}/api/auth/login",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@sanosysalvos.cl\",\n  \"password\": \"admin123\"\n}"
             },
-            "description": "Inicia sesión y obtiene un token JWT. El token se guarda automáticamente en la variable {{token}}.\n\n**Usuarios demo:**\n- admin@sanosysalvos.cl / admin123 (ADMIN)\n- refugio@esperanza.cl / refugio123 (REFUGIO)\n- muni@conce.cl / muni123 (MUNICIPALIDAD)\n- dueno@demo.cl / dueno123 (DUENO)"
-          },
-          "response": [
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Inicia sesion con el usuario administrador. El token JWT se guarda automaticamente en la variable de coleccion."
+          }
+        },
+        {
+          "name": "Login - dueno",
+          "event": [
             {
-              "name": "Login exitoso",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiJ9...\",\n    \"usuario\": {\n      \"id_usuario\": \"usr-admin-001\",\n      \"nombre\": \"Admin Sanos y Salvos\",\n      \"email\": \"admin@sanosysalvos.cl\",\n      \"rol\": \"ADMIN\",\n      \"activo\": true\n    }\n  }\n}"
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "var payload = res.data ? res.data : res;",
+                  "if (payload && payload.token) {",
+                  "    pm.collectionVariables.set('token', payload.token);",
+                  "    pm.collectionVariables.set('usuario_id', payload.usuario ? payload.usuario.idUsuario : '');",
+                  "}",
+                  "pm.test('Login exitoso', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
             }
-          ]
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"dueno@demo.cl\",\n  \"password\": \"dueno123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login con usuario de rol DUENO."
+          }
+        },
+        {
+          "name": "Login - refugio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "var payload = res.data ? res.data : res;",
+                  "if (payload && payload.token) {",
+                  "    pm.collectionVariables.set('token', payload.token);",
+                  "}",
+                  "pm.test('Login exitoso', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"refugio@esperanza.cl\",\n  \"password\": \"refugio123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login con usuario de rol REFUGIO (moderador)."
+          }
         },
         {
           "name": "Registro",
           "request": {
             "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "url": "{{base_url}}/api/auth/register",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Juan Pérez\",\n  \"email\": \"juan@ejemplo.cl\",\n  \"password\": \"mipass123\",\n  \"rol\": \"DUENO\"\n}"
+              "raw": "{\n  \"nombre\": \"Maria Gonzalez\",\n  \"email\": \"maria@test.cl\",\n  \"password\": \"segura123\"\n}"
             },
-            "description": "Crea una nueva cuenta. El rol ADMIN no puede asignarse por registro público."
-          },
-          "response": [
-            {
-              "name": "Registro exitoso",
-              "status": "Created",
-              "code": 201,
-              "body": "{\n  \"success\": true,\n  \"message\": \"Cuenta creada exitosamente\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiJ9...\",\n    \"usuario\": {\n      \"id_usuario\": \"uuid-generado\",\n      \"nombre\": \"Juan Pérez\",\n      \"email\": \"juan@ejemplo.cl\",\n      \"rol\": \"DUENO\",\n      \"activo\": true\n    }\n  }\n}"
-            }
-          ]
-        },
-        {
-          "name": "Mi Perfil 🔒",
-          "request": {
-            "method": "GET",
-            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": "{{base_url}}/api/auth/me",
-            "description": "Retorna el perfil del usuario autenticado."
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registra una nueva cuenta. El rol queda como DUENO por defecto. Retorna 409 si el email ya existe."
           }
         },
         {
-          "name": "Actualizar Perfil 🔒",
+          "name": "Mi perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Retorna los datos del usuario autenticado segun el token JWT."
+          }
+        },
+        {
+          "name": "Actualizar nombre",
           "request": {
             "method": "PUT",
             "header": [
-              {"key": "Content-Type", "value": "application/json"},
-              {"key": "Authorization", "value": "Bearer {{token}}"}
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
-            "url": "{{base_url}}/api/auth/me",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Juan A. Pérez\"\n}"
-            }
+              "raw": "{\n  \"nombre\": \"Maria A. Gonzalez\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Actualiza el nombre del usuario autenticado. Minimo 2 caracteres, maximo 120."
           }
         },
         {
-          "name": "Cambiar Contraseña 🔒",
+          "name": "Cambiar contrasena",
           "request": {
             "method": "PUT",
             "header": [
-              {"key": "Content-Type", "value": "application/json"},
-              {"key": "Authorization", "value": "Bearer {{token}}"}
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
-            "url": "{{base_url}}/api/auth/me/password",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"password_actual\": \"mipass123\",\n  \"password_nuevo\": \"nuevapass456\"\n}"
-            }
+              "raw": "{\n  \"password_actual\": \"dueno123\",\n  \"password_nuevo\": \"nueva456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/me/password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me", "password"]
+            },
+            "description": "Cambia la contrasena. La nueva debe ser diferente a la actual y tener minimo 6 caracteres."
           }
         },
         {
-          "name": "Listar Usuarios (ADMIN) 🔒",
+          "name": "Listar usuarios (admin)",
           "request": {
             "method": "GET",
-            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": "{{base_url}}/api/auth/usuarios"
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "usuarios"]
+            },
+            "description": "Lista todos los usuarios. Requiere rol ADMIN. Hacer Login admin primero."
           }
         },
         {
-          "name": "Estadísticas Usuarios (ADMIN) 🔒",
+          "name": "Estadisticas de usuarios (admin)",
           "request": {
             "method": "GET",
-            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": "{{base_url}}/api/auth/usuarios/estadisticas"
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/usuarios/estadisticas",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "usuarios", "estadisticas"]
+            },
+            "description": "Conteo de usuarios por rol. Requiere rol ADMIN."
           }
         },
         {
-          "name": "Cambiar Rol Usuario (ADMIN) 🔒",
+          "name": "Cambiar rol (admin)",
           "request": {
             "method": "PUT",
             "header": [
-              {"key": "Content-Type", "value": "application/json"},
-              {"key": "Authorization", "value": "Bearer {{token}}"}
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
-            "url": "{{base_url}}/api/auth/usuarios/usr-dueno-001/rol",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"rol\": \"REFUGIO\"\n}"
-            }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/usuarios/{{usuario_id}}/rol",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "usuarios", "{{usuario_id}}", "rol"]
+            },
+            "description": "Cambia el rol de un usuario. Requiere rol ADMIN. Valores: DUENO, VETERINARIA, REFUGIO, MUNICIPALIDAD, ADMIN."
           }
         },
         {
-          "name": "Toggle Activo Usuario (ADMIN) 🔒",
+          "name": "Toggle activo (admin)",
           "request": {
             "method": "PUT",
-            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": "{{base_url}}/api/auth/usuarios/usr-dueno-001/toggle-activo"
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/usuarios/{{usuario_id}}/toggle-activo",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "usuarios", "{{usuario_id}}", "toggle-activo"]
+            },
+            "description": "Activa o desactiva la cuenta de un usuario. Requiere rol ADMIN."
           }
         }
       ]
@@ -161,185 +357,201 @@
       "name": "Mascotas",
       "item": [
         {
-          "name": "Buscar Mascotas (con filtros)",
+          "name": "Listar todas",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/mascotas/busqueda?estado=PERDIDA&tipo_animal=Perro&tamano=Grande&raza=Labrador",
+              "raw": "{{base_url}}/mascotas",
               "host": ["{{base_url}}"],
-              "path": ["api", "mascotas", "busqueda"],
+              "path": ["mascotas"]
+            },
+            "description": "Retorna todas las mascotas sin filtros."
+          }
+        },
+        {
+          "name": "Buscar con filtros",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/mascotas/busqueda?estado=PERDIDA&tipo_animal=Perro",
+              "host": ["{{base_url}}"],
+              "path": ["mascotas", "busqueda"],
               "query": [
-                {"key": "estado", "value": "PERDIDA", "description": "PERDIDA | ENCONTRADA | REUNIFICADA"},
-                {"key": "tipo_animal", "value": "Perro", "description": "Perro | Gato | Ave | Conejo | Otro"},
-                {"key": "tamano", "value": "Grande", "description": "Pequeño | Mediano | Grande"},
-                {"key": "raza", "value": "Labrador", "description": "Búsqueda parcial por raza"}
+                { "key": "estado", "value": "PERDIDA", "description": "PERDIDA, ENCONTRADA o REUNIFICADA" },
+                { "key": "tipo_animal", "value": "Perro" },
+                { "key": "tamano", "value": "", "disabled": true, "description": "Pequeño, Mediano o Grande" },
+                { "key": "raza", "value": "", "disabled": true }
               ]
             },
-            "description": "Lista todas las mascotas con filtros opcionales. Sin filtros retorna todas."
-          },
-          "response": [
-            {
-              "name": "Lista de mascotas",
-              "status": "OK",
-              "code": 200,
-              "body": "[\n  {\n    \"idMascota\": \"msc-001\",\n    \"tipoAnimal\": \"Perro\",\n    \"raza\": \"Labrador\",\n    \"nombre\": \"Max\",\n    \"colorPrimario\": \"Amarillo\",\n    \"tamano\": \"Grande\",\n    \"sexo\": \"Macho\",\n    \"latitud\": -36.8201,\n    \"longitud\": -73.0444,\n    \"sector\": \"Concepcion Centro\",\n    \"comuna\": \"Concepcion\",\n    \"estado\": \"PERDIDA\",\n    \"fechaReporte\": \"2026-06-11T07:59:58\"\n  }\n]"
-            }
-          ]
-        },
-        {
-          "name": "Obtener Mascota por ID",
-          "request": {
-            "method": "GET",
-            "url": "{{base_url}}/api/mascotas/msc-001",
-            "description": "Retorna el detalle completo de una mascota por su ID."
+            "description": "Busqueda con filtros opcionales. Dejar en blanco los que no se necesiten."
           }
         },
         {
-          "name": "Estadísticas Mascotas",
+          "name": "Obtener por ID",
           "request": {
             "method": "GET",
-            "url": "{{base_url}}/api/mascotas/estadisticas",
-            "description": "Retorna totales por estado: total, perdidas, encontradas, reunificadas."
-          },
-          "response": [
-            {
-              "name": "Estadísticas",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"total\": 3,\n  \"perdidas\": 2,\n  \"encontradas\": 1,\n  \"reunificadas\": 0\n}"
-            }
-          ]
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/mascotas/{{mascota_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["mascotas", "{{mascota_id}}"]
+            },
+            "description": "Detalle completo de una mascota. La variable mascota_id viene del seed o se guarda al crear una."
+          }
         },
         {
-          "name": "Reportar Mascota 🔒",
+          "name": "Estadisticas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/mascotas/estadisticas",
+              "host": ["{{base_url}}"],
+              "path": ["mascotas", "estadisticas"]
+            },
+            "description": "Totales por estado: perdidas, encontradas, reunificadas."
+          }
+        },
+        {
+          "name": "Mis reportes",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mascotas/usuario/mis-reportes",
+              "host": ["{{base_url}}"],
+              "path": ["mascotas", "usuario", "mis-reportes"]
+            },
+            "description": "Mascotas del usuario autenticado. Requiere token."
+          }
+        },
+        {
+          "name": "Reportar mascota",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res && res.idMascota) {",
+                  "    pm.collectionVariables.set('mascota_id', res.idMascota);",
+                  "}",
+                  "pm.test('Mascota creada', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              {"key": "Content-Type", "value": "application/json"},
-              {"key": "Authorization", "value": "Bearer {{token}}"}
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
-            "url": "{{base_url}}/api/mascotas/reportar",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tipoAnimal\": \"Perro\",\n  \"nombre\": \"Firulais\",\n  \"raza\": \"Labrador\",\n  \"colorPrimario\": \"Amarillo\",\n  \"tamano\": \"Grande\",\n  \"sexo\": \"Macho\",\n  \"edad\": \"3 años\",\n  \"estado\": \"PERDIDA\",\n  \"descripcion\": \"Tiene collar azul con plaquita\",\n  \"contacto\": \"dueno@ejemplo.cl\",\n  \"telefono\": \"+56 9 1234 5678\",\n  \"sector\": \"Centro\",\n  \"comuna\": \"Concepcion\",\n  \"direccion\": \"Barros Arana 450\",\n  \"latitud\": -36.8201,\n  \"longitud\": -73.0444,\n  \"fotoUrl\": null\n}"
+              "raw": "{\n  \"tipoAnimal\": \"Perro\",\n  \"nombre\": \"Coco\",\n  \"raza\": \"Mestizo\",\n  \"colorPrimario\": \"Cafe\",\n  \"tamano\": \"Mediano\",\n  \"sexo\": \"Macho\",\n  \"edad\": \"3 anos\",\n  \"estado\": \"PERDIDA\",\n  \"sector\": \"Centro\",\n  \"comuna\": \"Concepcion\",\n  \"direccion\": \"Barros Arana 450\",\n  \"contacto\": \"dueno@demo.cl\",\n  \"latitud\": -36.8201,\n  \"longitud\": -73.0444,\n  \"descripcion\": \"Collar rojo, muy amigable\"\n}"
             },
-            "description": "Crea un nuevo reporte de mascota. Requiere autenticación."
+            "url": {
+              "raw": "{{base_url}}/mascotas/reportar",
+              "host": ["{{base_url}}"],
+              "path": ["mascotas", "reportar"]
+            },
+            "description": "Registra una nueva mascota. Requiere token. El ID creado se guarda en mascota_id automaticamente."
           }
         },
         {
-          "name": "Actualizar Mascota 🔒",
+          "name": "Actualizar mascota",
           "request": {
             "method": "PUT",
             "header": [
-              {"key": "Content-Type", "value": "application/json"},
-              {"key": "Authorization", "value": "Bearer {{token}}"}
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
-            "url": "{{base_url}}/api/mascotas/msc-001",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tipoAnimal\": \"Perro\",\n  \"nombre\": \"Max\",\n  \"estado\": \"ENCONTRADA\",\n  \"sector\": \"Barrio Norte\",\n  \"comuna\": \"Concepcion\",\n  \"direccion\": \"Nueva dirección\",\n  \"contacto\": \"contacto@ejemplo.cl\",\n  \"latitud\": -36.8201,\n  \"longitud\": -73.0444\n}"
-            }
+              "raw": "{\n  \"tipoAnimal\": \"Perro\",\n  \"nombre\": \"Coco\",\n  \"raza\": \"Mestizo\",\n  \"colorPrimario\": \"Cafe\",\n  \"tamano\": \"Mediano\",\n  \"estado\": \"ENCONTRADA\",\n  \"sector\": \"Centro\",\n  \"comuna\": \"Concepcion\",\n  \"direccion\": \"Barros Arana 450\",\n  \"contacto\": \"dueno@demo.cl\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/mascotas/{{mascota_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["mascotas", "{{mascota_id}}"]
+            },
+            "description": "Actualiza una mascota. Solo el dueno o moderador puede editar."
           }
         },
         {
-          "name": "Eliminar Mascota 🔒",
+          "name": "Eliminar mascota",
           "request": {
             "method": "DELETE",
-            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": "{{base_url}}/api/mascotas/msc-001"
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mascotas/{{mascota_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["mascotas", "{{mascota_id}}"]
+            },
+            "description": "Elimina una mascota. Solo el dueno o moderador puede eliminar."
           }
         },
         {
-          "name": "Mis Reportes 🔒",
-          "request": {
-            "method": "GET",
-            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": "{{base_url}}/api/mascotas/usuario/mis-reportes",
-            "description": "Retorna las mascotas reportadas por el usuario autenticado."
-          }
-        },
-        {
-          "name": "Reportar Encuentro 🔒",
+          "name": "Reportar encuentro",
           "request": {
             "method": "POST",
             "header": [
-              {"key": "Content-Type", "value": "application/json"},
-              {"key": "Authorization", "value": "Bearer {{token}}"}
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
-            "url": "{{base_url}}/api/mascotas/msc-001/reportar-encuentro",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"foto_evidencia_url\": \"https://foto.com/evidencia.jpg\",\n  \"encontrada_en\": \"Parque Ecuador, Concepción\",\n  \"contacto_nombre\": \"María González\",\n  \"contacto_telefono\": \"+56 9 8765 4321\"\n}"
-            }
+              "raw": "{\n  \"encontrada_en\": \"Parque Ecuador, Concepcion\",\n  \"contacto_nombre\": \"Juan Perez\",\n  \"contacto_telefono\": \"+56912345678\",\n  \"foto_evidencia_url\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/mascotas/{{mascota_id}}/reportar-encuentro",
+              "host": ["{{base_url}}"],
+              "path": ["mascotas", "{{mascota_id}}", "reportar-encuentro"]
+            },
+            "description": "Reporta que encontro una mascota perdida. Queda EN_REVISION hasta que un moderador la revise."
           }
         },
         {
-          "name": "Encuentros en Revisión",
+          "name": "Encuentros en revision",
           "request": {
             "method": "GET",
-            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": "{{base_url}}/api/mascotas/encuentros/revision"
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/mascotas/encuentros/revision",
+              "host": ["{{base_url}}"],
+              "path": ["mascotas", "encuentros", "revision"]
+            },
+            "description": "Lista todos los reportes de encuentro pendientes de revision."
           }
         },
         {
-          "name": "Revisar Encuentro (ADMIN/REFUGIO) 🔒",
+          "name": "Revisar encuentro",
           "request": {
             "method": "PUT",
             "header": [
-              {"key": "Content-Type", "value": "application/json"},
-              {"key": "Authorization", "value": "Bearer {{token}}"}
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
-            "url": "{{base_url}}/api/mascotas/encuentros/revision/id-reporte",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"accion\": \"APROBAR\"\n}"
             },
-            "description": "Aprueba o rechaza una solicitud de encuentro. accion: APROBAR | RECHAZAR"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Geolocalización",
-      "item": [
-        {
-          "name": "Puntos del Mapa",
-          "request": {
-            "method": "GET",
-            "url": "{{base_url}}/api/geolocalizacion/puntos",
-            "description": "Retorna todos los puntos georreferenciados para mostrar en el mapa."
-          }
-        },
-        {
-          "name": "Zonas Críticas por Comuna",
-          "request": {
-            "method": "GET",
-            "url": "{{base_url}}/api/geolocalizacion/zonas-criticas",
-            "description": "Retorna el conteo de casos por comuna ordenado por total."
-          }
-        },
-        {
-          "name": "Mapa de Calor",
-          "request": {
-            "method": "GET",
-            "url": "{{base_url}}/api/geolocalizacion/mapa-calor",
-            "description": "Retorna puntos con peso para heatmap. PERDIDA=1.0, ENCONTRADA=0.6"
-          },
-          "response": [
-            {
-              "name": "Heatmap data",
-              "status": "OK",
-              "code": 200,
-              "body": "[\n  { \"lat\": -36.8201, \"lng\": -73.0444, \"weight\": 1.0 },\n  { \"lat\": -36.8301, \"lng\": -73.0544, \"weight\": 0.6 }\n]"
-            }
-          ]
-        },
-        {
-          "name": "Estadísticas Geográficas",
-          "request": {
-            "method": "GET",
-            "url": "{{base_url}}/api/geolocalizacion/estadisticas",
-            "description": "Retorna métricas geográficas: total con geolocalización, comunas activas, zona más activa."
+            "url": {
+              "raw": "{{base_url}}/mascotas/encuentros/revision/REPORTE_ID_AQUI",
+              "host": ["{{base_url}}"],
+              "path": ["mascotas", "encuentros", "revision", "REPORTE_ID_AQUI"]
+            },
+            "description": "Aprueba o rechaza un encuentro. Valores: APROBAR o RECHAZAR. Al aprobar la mascota pasa a REUNIFICADA. Reemplazar REPORTE_ID_AQUI con el id del reporte obtenido en Encuentros en revision."
           }
         }
       ]
@@ -348,57 +560,108 @@
       "name": "Motor de Coincidencias",
       "item": [
         {
-          "name": "Buscar Coincidencias",
+          "name": "Buscar coincidencias",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/motor/buscar/msc-001?maxKm=20&minScore=30&limite=10",
+              "raw": "{{base_url}}/motor/buscar/{{mascota_id}}?maxKm=10&minScore=40&limite=5",
               "host": ["{{base_url}}"],
-              "path": ["api", "motor", "buscar", "msc-001"],
+              "path": ["motor", "buscar", "{{mascota_id}}"],
               "query": [
-                {"key": "maxKm", "value": "20", "description": "Radio máximo en kilómetros"},
-                {"key": "minScore", "value": "30", "description": "Score mínimo de coincidencia (0-100)"},
-                {"key": "limite", "value": "10", "description": "Máximo de resultados"}
+                { "key": "maxKm", "value": "10", "description": "Distancia maxima en km (0.1 a 500)" },
+                { "key": "minScore", "value": "40", "description": "Score minimo de similitud (0 a 100)" },
+                { "key": "limite", "value": "5", "description": "Maximo de resultados (1 a 50)" }
               ]
             },
-            "description": "Ejecuta el algoritmo Haversine + scoring para encontrar mascotas similares.\n\nScore = tipo(30) + raza(30) + color(20) + tamaño(10) + distancia<2km(10)"
-          },
-          "response": [
-            {
-              "name": "Coincidencias encontradas",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"origen\": { \"idMascota\": \"msc-001\", \"nombre\": \"Max\", \"estado\": \"PERDIDA\" },\n  \"total\": 1,\n  \"resultados\": [\n    {\n      \"mascota\": { \"idMascota\": \"msc-002\", \"nombre\": \"Sin nombre\", \"estado\": \"ENCONTRADA\" },\n      \"score\": 80,\n      \"distanciaKm\": 1.2\n    }\n  ]\n}"
-            }
-          ]
-        },
-        {
-          "name": "Historial de Coincidencias",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/api/motor/historial?limite=20",
-              "host": ["{{base_url}}"],
-              "path": ["api", "motor", "historial"],
-              "query": [{"key": "limite", "value": "20"}]
-            }
+            "description": "Busca mascotas candidatas a coincidir segun tipo, raza, color y distancia geografica."
           }
         },
         {
-          "name": "Resumen del Motor",
+          "name": "Historial de coincidencias",
           "request": {
             "method": "GET",
-            "url": "{{base_url}}/api/motor/resumen",
-            "description": "Retorna estadísticas del motor: total procesadas, coincidencias altas (≥70%), medias (50-70%), última semana."
-          },
-          "response": [
-            {
-              "name": "Resumen",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"totalProcesadas\": 42,\n  \"coincidenciasAltas\": 15,\n  \"coincidenciasMedias\": 10,\n  \"ultimaSemana\": 5\n}"
-            }
-          ]
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/motor/historial?limite=20",
+              "host": ["{{base_url}}"],
+              "path": ["motor", "historial"],
+              "query": [
+                { "key": "limite", "value": "20", "description": "Cantidad de registros (1 a 100)" }
+              ]
+            },
+            "description": "Historial de coincidencias calculadas por el motor."
+          }
+        },
+        {
+          "name": "Resumen del motor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/motor/resumen",
+              "host": ["{{base_url}}"],
+              "path": ["motor", "resumen"]
+            },
+            "description": "Estadisticas generales del motor de coincidencias."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geolocalizacion",
+      "item": [
+        {
+          "name": "Puntos del mapa",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/geolocalizacion/puntos",
+              "host": ["{{base_url}}"],
+              "path": ["geolocalizacion", "puntos"]
+            },
+            "description": "Coordenadas de todas las mascotas para mostrar en el mapa interactivo."
+          }
+        },
+        {
+          "name": "Zonas criticas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/geolocalizacion/zonas-criticas",
+              "host": ["{{base_url}}"],
+              "path": ["geolocalizacion", "zonas-criticas"]
+            },
+            "description": "Comunas con mayor cantidad de reportes activos."
+          }
+        },
+        {
+          "name": "Mapa de calor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/geolocalizacion/mapa-calor",
+              "host": ["{{base_url}}"],
+              "path": ["geolocalizacion", "mapa-calor"]
+            },
+            "description": "Puntos agrupados por zona para renderizar el mapa de calor."
+          }
+        },
+        {
+          "name": "Estadisticas geograficas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/geolocalizacion/estadisticas",
+              "host": ["{{base_url}}"],
+              "path": ["geolocalizacion", "estadisticas"]
+            },
+            "description": "Estadisticas geograficas generales del sistema."
+          }
         }
       ]
     }

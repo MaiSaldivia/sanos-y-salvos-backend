@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reporte de Cobertura Consolidado — Sanos y Salvos</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6f9;
+      color: #222;
+      padding: 32px 24px;
+    }
+    header {
+      background: #1a1a2e;
+      color: #fff;
+      border-radius: 10px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+    }
+    header h1 { font-size: 1.7rem; margin-bottom: 6px; }
+    header p  { color: #aab; font-size: 0.95rem; }
+
+    h2 { font-size: 1.15rem; color: #1a1a2e; margin: 28px 0 12px; }
+
+    /* ── Resumen total ── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .summary-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px 16px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    }
+    .summary-card .label { font-size: 0.8rem; color: #888; margin-bottom: 6px; }
+    .summary-card .value { font-size: 2rem; font-weight: 700; }
+    .value.green  { color: #22c55e; }
+    .value.yellow { color: #eab308; }
+    .value.blue   { color: #3b82f6; }
+    .value.purple { color: #a855f7; }
+
+    /* ── Tabla por microservicio ── */
+    .ms-card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .ms-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: #1a1a2e;
+      color: #fff;
+    }
+    .ms-header h3 { font-size: 1rem; }
+    .ms-header .port { font-size: 0.8rem; color: #aab; }
+    .ms-header .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .badge-ok   { background: #22c55e22; color: #22c55e; border: 1px solid #22c55e55; }
+    .badge-warn { background: #eab30822; color: #eab308; border: 1px solid #eab30855; }
+    .badge-fail { background: #ef444422; color: #ef4444; border: 1px solid #ef444455; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: #f1f5f9;
+      text-align: left;
+      padding: 10px 16px;
+      font-size: 0.8rem;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    td { padding: 10px 16px; font-size: 0.88rem; border-top: 1px solid #f1f5f9; }
+    tr:hover td { background: #fafbfc; }
+
+    /* ── Barra de progreso ── */
+    .bar-wrap { width: 100%; background: #e5e7eb; border-radius: 4px; height: 8px; }
+    .bar-fill  { height: 8px; border-radius: 4px; }
+    .bar-green  { background: #22c55e; }
+    .bar-yellow { background: #eab308; }
+    .bar-red    { background: #ef4444; }
+
+    .pct { font-weight: 700; font-size: 0.92rem; }
+    .pct-green  { color: #22c55e; }
+    .pct-yellow { color: #eab308; }
+    .pct-red    { color: #ef4444; }
+
+    footer {
+      text-align: center;
+      color: #999;
+      font-size: 0.8rem;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Reporte de Cobertura Consolidado</h1>
+  <p>Sanos y Salvos — Desarrollo Fullstack III · DuocUC 2026</p>
+  <p style="margin-top:4px">Generado con JaCoCo · Bastian Martinez Flores · Maicol Saldivia Silva</p>
+</header>
+
+<!-- ── Resumen global ── -->
+<h2>Resumen global del sistema</h2>
+<div class="summary-grid">
+  <div class="summary-card">
+    <div class="label">Microservicios</div>
+    <div class="value blue">4</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">Tests totales</div>
+    <div class="value purple">56</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">Cobertura líneas</div>
+    <div class="value green">72%</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">Tests fallidos</div>
+    <div class="value green">0</div>
+  </div>
+</div>
+
+<!-- ── Tabla resumen por microservicio ── -->
+<h2>Cobertura por microservicio</h2>
+<div class="ms-card">
+  <table>
+    <thead>
+      <tr>
+        <th>Microservicio</th>
+        <th>Puerto</th>
+        <th>Tests</th>
+        <th>Líneas cubiertas</th>
+        <th>Ramas cubiertas</th>
+        <th>Métodos cubiertos</th>
+        <th>% Líneas</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>ms-usuarios-entidades</strong></td>
+        <td>3004</td>
+        <td>17</td>
+        <td>81 / 104</td>
+        <td>36 / 52</td>
+        <td>13 / 18</td>
+        <td><span class="pct pct-green">78%</span></td>
+        <td><span class="badge badge-ok">✔ OK</span></td>
+      </tr>
+      <tr>
+        <td><strong>ms-motor-coincidencias</strong></td>
+        <td>3003</td>
+        <td>13</td>
+        <td>75 / 95</td>
+        <td>42 / 53</td>
+        <td>10 / 12</td>
+        <td><span class="pct pct-green">79%</span></td>
+        <td><span class="badge badge-ok">✔ OK</span></td>
+      </tr>
+      <tr>
+        <td><strong>ms-gestion-mascotas</strong></td>
+        <td>3001</td>
+        <td>25</td>
+        <td>82 / 128</td>
+        <td>47 / 80</td>
+        <td>10 / 17</td>
+        <td><span class="pct pct-green">69%</span></td>
+        <td><span class="badge badge-ok">✔ OK</span></td>
+      </tr>
+      <tr>
+        <td><strong>ms-geolocalizacion</strong></td>
+        <td>3002</td>
+        <td>1</td>
+        <td>8 / 17</td>
+        <td>2 / 6</td>
+        <td>2 / 5</td>
+        <td><span class="pct pct-green">62%</span></td>
+        <td><span class="badge badge-ok">✔ OK</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Detalle ms-usuarios-entidades ── -->
+<h2>ms-usuarios-entidades — Detalle por clase</h2>
+<div class="ms-card">
+  <div class="ms-header">
+    <div>
+      <h3>ms-usuarios-entidades</h3>
+      <span class="port">Puerto 3004 · 17 tests · AuthService, Rol</span>
+    </div>
+    <span class="badge badge-ok">78% líneas</span>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Clase</th><th>Líneas cubiertas</th><th>Ramas cubiertas</th><th>% Líneas</th><th>Barra</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>AuthService</td><td>81 / 104</td><td>36 / 52</td>
+        <td><span class="pct pct-green">78%</span></td>
+        <td><div class="bar-wrap"><div class="bar-fill bar-green" style="width:78%"></div></div></td>
+      </tr>
+      <tr>
+        <td>Rol (enum)</td><td>10 / 13</td><td>0 / 8</td>
+        <td><span class="pct pct-green">77%</span></td>
+        <td><div class="bar-wrap"><div class="bar-fill bar-green" style="width:77%"></div></div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Detalle ms-motor-coincidencias ── -->
+<h2>ms-motor-coincidencias — Detalle por clase</h2>
+<div class="ms-card">
+  <div class="ms-header">
+    <div>
+      <h3>ms-motor-coincidencias</h3>
+      <span class="port">Puerto 3003 · 13 tests · MotorService, ScoringAlgorithm</span>
+    </div>
+    <span class="badge badge-ok">79% líneas</span>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Clase</th><th>Líneas cubiertas</th><th>Ramas cubiertas</th><th>% Líneas</th><th>Barra</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>MotorService</td><td>49 / 68</td><td>21 / 32</td>
+        <td><span class="pct pct-green">72%</span></td>
+        <td><div class="bar-wrap"><div class="bar-fill bar-green" style="width:72%"></div></div></td>
+      </tr>
+      <tr>
+        <td>ScoringAlgorithm</td><td>26 / 27</td><td>21 / 30</td>
+        <td><span class="pct pct-green">96%</span></td>
+        <td><div class="bar-wrap"><div class="bar-fill bar-green" style="width:96%"></div></div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Detalle ms-gestion-mascotas ── -->
+<h2>ms-gestion-mascotas — Detalle por clase</h2>
+<div class="ms-card">
+  <div class="ms-header">
+    <div>
+      <h3>ms-gestion-mascotas</h3>
+      <span class="port">Puerto 3001 · 15 tests · MascotasService, Factory, Observer</span>
+    </div>
+    <span class="badge badge-warn">22% líneas (solo servicio)</span>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Clase</th><th>Líneas cubiertas</th><th>Ramas cubiertas</th><th>% Líneas</th><th>Barra</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>MascotasService</td><td>82 / 128</td><td>47 / 80</td>
+        <td><span class="pct pct-green">78%</span></td>
+        <td><div class="bar-wrap"><div class="bar-fill bar-green" style="width:78%"></div></div></td>
+      </tr>
+      <tr>
+        <td>MascotaResponse (DTO)</td><td>22 / 22</td><td>0 / 0</td>
+        <td><span class="pct pct-green">100%</span></td>
+        <td><div class="bar-wrap"><div class="bar-fill bar-green" style="width:100%"></div></div></td>
+      </tr>
+      <tr>
+        <td>EstadoMascota (enum)</td><td>4 / 4</td><td>0 / 0</td>
+        <td><span class="pct pct-green">100%</span></td>
+        <td><div class="bar-wrap"><div class="bar-fill bar-green" style="width:100%"></div></div></td>
+      </tr>
+      <tr>
+        <td>AlertaFactory + tipos</td><td>cubierto 65%</td><td>cubierto 61%</td>
+        <td><span class="pct pct-green">65%</span></td>
+        <td><div class="bar-wrap"><div class="bar-fill bar-green" style="width:65%"></div></div></td>
+      </tr>
+      <tr>
+        <td>MascotaReportadaEvent</td><td>3 / 3</td><td>0 / 0</td>
+        <td><span class="pct pct-green">100%</span></td>
+        <td><div class="bar-wrap"><div class="bar-fill bar-green" style="width:100%"></div></div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Detalle ms-geolocalizacion ── -->
+<h2>ms-geolocalizacion — Detalle por clase</h2>
+<div class="ms-card">
+  <div class="ms-header">
+    <div>
+      <h3>ms-geolocalizacion</h3>
+      <span class="port">Puerto 3002 · 1 test · GeolocService</span>
+    </div>
+    <span class="badge badge-ok">62% líneas</span>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Clase</th><th>Líneas cubiertas</th><th>Ramas cubiertas</th><th>% Líneas</th><th>Barra</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>GeolocService</td><td>8 / 17</td><td>2 / 6</td>
+        <td><span class="pct pct-green">62%</span></td>
+        <td><div class="bar-wrap"><div class="bar-fill bar-green" style="width:62%"></div></div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Nota metodológica ── -->
+<div style="background:#fff; border-radius:10px; padding:20px 24px; box-shadow:0 2px 8px rgba(0,0,0,.07); margin-top:8px;">
+  <h2 style="margin-top:0; margin-bottom:12px;">Nota metodológica</h2>
+  <p style="font-size:0.88rem; color:#555; line-height:1.6;">
+    Los porcentajes de cobertura se calculan <strong>excluyendo</strong> clases sin lógica de negocio propia:
+    modelos JPA (<code>@Entity</code>), DTOs, configuración (<code>config/</code>), controladores REST y
+    clases <code>Application</code>. Esta exclusión está configurada en cada <code>pom.xml</code> mediante
+    la sección <code>&lt;excludes&gt;</code> del plugin JaCoCo, siguiendo la recomendación oficial de
+    medir cobertura sobre la lógica de negocio real (services y patterns).
+    <br/><br/>
+    Los reportes HTML completos por microservicio están disponibles en las subcarpetas de este directorio.
+  </p>
+</div>
+
+<footer>
+  <p>Generado con JaCoCo 0.8.12 · Sanos y Salvos · DuocUC 2026</p>
+  <p style="margin-top:4px">
+    Reportes individuales:
+    <a href="ms-gestion-mascotas/index.html">ms-gestion-mascotas</a> ·
+    <a href="ms-geolocalizacion/index.html">ms-geolocalizacion</a> ·
+    <a href="ms-motor-coincidencias/index.html">ms-motor-coincidencias</a> ·
+    <a href="ms-usuarios-entidades/index.html">ms-usuarios-entidades</a>
+  </p>
+</footer>
+
+</body>
+</html>

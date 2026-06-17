@@ -6,16 +6,16 @@ import com.sanosysalvos.mascotas.model.Mascota;
 <span class="nc" id="L6">public class AlertaFactory {</span>
 
     public static Alerta crear(EstadoMascota estado, Mascota m) {
-<span class="nc bnc" id="L9" title="All 2 branches missed.">        if (estado == null) {</span>
-<span class="nc" id="L10">            throw new IllegalArgumentException(&quot;Estado desconocido: null&quot;);</span>
+<span class="fc bfc" id="L9" title="All 2 branches covered.">        if (estado == null) {</span>
+<span class="fc" id="L10">            throw new IllegalArgumentException(&quot;Estado desconocido: null&quot;);</span>
         }
-<span class="nc bnc" id="L12" title="All 4 branches missed.">        switch (estado) {</span>
+<span class="pc bpc" id="L12" title="1 of 4 branches missed.">        switch (estado) {</span>
             case PERDIDA:
-<span class="nc" id="L14">                return new AlertaExtravio(m.getIdMascota(), m.getContacto(), m.getSector(), m.getNombre(), m.getTipoAnimal(), m.getRaza());</span>
+<span class="fc" id="L14">                return new AlertaExtravio(m.getIdMascota(), m.getContacto(), m.getSector(), m.getNombre(), m.getTipoAnimal(), m.getRaza());</span>
             case ENCONTRADA:
-<span class="nc" id="L16">                return new AlertaHallazgo(m.getIdMascota(), m.getContacto(), m.getSector(), m.getTipoAnimal(), m.getDescripcion());</span>
+<span class="fc" id="L16">                return new AlertaHallazgo(m.getIdMascota(), m.getContacto(), m.getSector(), m.getTipoAnimal(), m.getDescripcion());</span>
             case REUNIFICADA:
-<span class="nc" id="L18">                return new AlertaReunificacion(m.getIdMascota(), m.getContacto(), m.getSector(), m.getNombre());</span>
+<span class="fc" id="L18">                return new AlertaReunificacion(m.getIdMascota(), m.getContacto(), m.getSector(), m.getNombre());</span>
             default:
 <span class="nc" id="L20">                throw new IllegalArgumentException(&quot;Estado desconocido: &quot; + estado);</span>
         }

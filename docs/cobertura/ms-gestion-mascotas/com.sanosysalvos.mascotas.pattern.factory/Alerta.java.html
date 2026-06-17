@@ -17,13 +17,13 @@ public abstract class Alerta {
     protected String sector;
     protected String fecha;
 
-<span class="nc" id="L20">    public Alerta(String idMascota, String contacto, String sector) {</span>
-<span class="nc" id="L21">        this.idAlerta = UUID.randomUUID().toString();</span>
-<span class="nc" id="L22">        this.idMascota = idMascota;</span>
-<span class="nc" id="L23">        this.contacto = contacto;</span>
-<span class="nc" id="L24">        this.sector = sector;</span>
-<span class="nc" id="L25">        this.fecha = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);</span>
-<span class="nc" id="L26">    }</span>
+<span class="fc" id="L20">    public Alerta(String idMascota, String contacto, String sector) {</span>
+<span class="fc" id="L21">        this.idAlerta = UUID.randomUUID().toString();</span>
+<span class="fc" id="L22">        this.idMascota = idMascota;</span>
+<span class="fc" id="L23">        this.contacto = contacto;</span>
+<span class="fc" id="L24">        this.sector = sector;</span>
+<span class="fc" id="L25">        this.fecha = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);</span>
+<span class="fc" id="L26">    }</span>
 
     public abstract String getMensaje();
 
@@ -50,7 +50,7 @@ public abstract class Alerta {
     // Para simular la salida del tipo en JSON
     @JsonProperty(&quot;tipo&quot;)
     public String getTipo() {
-<span class="nc" id="L53">        return this.getClass().getSimpleName();</span>
+<span class="fc" id="L53">        return this.getClass().getSimpleName();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

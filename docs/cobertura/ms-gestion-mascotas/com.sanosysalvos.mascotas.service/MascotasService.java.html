@@ -2,6 +2,7 @@
 
 import com.sanosysalvos.mascotas.dto.MascotaRequest;
 import com.sanosysalvos.mascotas.dto.MascotaResponse;
+import com.sanosysalvos.mascotas.dto.ReporteEncuentroRequest;
 import com.sanosysalvos.mascotas.model.EstadoMascota;
 import com.sanosysalvos.mascotas.model.EstadoRevision;
 import com.sanosysalvos.mascotas.model.Mascota;
@@ -34,187 +35,216 @@ public class MascotasService {
     private final ApplicationEventPublisher eventPublisher;
 
     public List&lt;MascotaResponse&gt; obtenerTodas() {
-<span class="nc" id="L37">        return mascotaRepository.findAll().stream()</span>
-<span class="nc" id="L38">                .map(MascotaResponse::new)</span>
-<span class="nc" id="L39">                .collect(Collectors.toList());</span>
+<span class="fc" id="L38">        return mascotaRepository.findAll().stream()</span>
+<span class="fc" id="L39">                .map(MascotaResponse::new)</span>
+<span class="fc" id="L40">                .collect(Collectors.toList());</span>
     }
 
     public List&lt;MascotaResponse&gt; buscarConFiltros(String estadoStr, String tipoAnimal, String tamano, String raza) {
-<span class="nc" id="L43">        EstadoMascota estado = null;</span>
-<span class="nc bnc" id="L44" title="All 4 branches missed.">        if (estadoStr != null &amp;&amp; !estadoStr.isBlank()) {</span>
-<span class="nc" id="L45">            try { estado = EstadoMascota.valueOf(estadoStr.toUpperCase()); } catch (Exception ignored) {}</span>
+<span class="fc" id="L44">        EstadoMascota estado = null;</span>
+<span class="pc bpc" id="L45" title="1 of 4 branches missed.">        if (estadoStr != null &amp;&amp; !estadoStr.isBlank()) {</span>
+            try {
+<span class="fc" id="L47">                estado = EstadoMascota.valueOf(estadoStr.toUpperCase());</span>
+<span class="fc" id="L48">            } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L49">                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,</span>
+                        &quot;Estado inválido: '&quot; + estadoStr + &quot;'. Valores permitidos: PERDIDA, ENCONTRADA, REUNIFICADA&quot;);
+<span class="fc" id="L51">            }</span>
         }
-<span class="nc bnc" id="L47" title="All 4 branches missed.">        String tipoFinal  = (tipoAnimal != null &amp;&amp; !tipoAnimal.isBlank()) ? tipoAnimal : null;</span>
-<span class="nc bnc" id="L48" title="All 4 branches missed.">        String tamanoFinal= (tamano != null &amp;&amp; !tamano.isBlank()) ? tamano : null;</span>
-<span class="nc bnc" id="L49" title="All 4 branches missed.">        String razaFinal  = (raza != null &amp;&amp; !raza.isBlank()) ? raza : null;</span>
+<span class="pc bpc" id="L53" title="1 of 4 branches missed.">        String tipoFinal  = (tipoAnimal != null &amp;&amp; !tipoAnimal.isBlank()) ? tipoAnimal : null;</span>
+<span class="pc bpc" id="L54" title="3 of 4 branches missed.">        String tamanoFinal= (tamano != null &amp;&amp; !tamano.isBlank()) ? tamano : null;</span>
+<span class="pc bpc" id="L55" title="1 of 4 branches missed.">        String razaFinal  = (raza != null &amp;&amp; !raza.isBlank()) ? raza : null;</span>
 
-<span class="nc" id="L51">        return mascotaRepository.findWithFilters(estado, tipoFinal, tamanoFinal, razaFinal)</span>
-<span class="nc" id="L52">                .stream().map(MascotaResponse::new).collect(Collectors.toList());</span>
+<span class="fc" id="L57">        return mascotaRepository.findWithFilters(estado, tipoFinal, tamanoFinal, razaFinal)</span>
+<span class="fc" id="L58">                .stream().map(MascotaResponse::new).collect(Collectors.toList());</span>
     }
 
     public List&lt;MascotaResponse&gt; obtenerPorUsuario(String idUsuario) {
-<span class="nc" id="L56">        return mascotaRepository.findByIdUsuario(idUsuario).stream()</span>
-<span class="nc" id="L57">                .map(MascotaResponse::new)</span>
-<span class="nc" id="L58">                .collect(Collectors.toList());</span>
+<span class="fc" id="L62">        return mascotaRepository.findByIdUsuario(idUsuario).stream()</span>
+<span class="fc" id="L63">                .map(MascotaResponse::new)</span>
+<span class="fc" id="L64">                .collect(Collectors.toList());</span>
     }
 
     public MascotaResponse obtenerPorId(String idMascota) {
-<span class="fc" id="L62">        Mascota mascota = mascotaRepository.findById(idMascota)</span>
-<span class="fc" id="L63">                .orElseThrow(() -&gt; new RuntimeException(&quot;Mascota no encontrada&quot;));</span>
-<span class="fc" id="L64">        return new MascotaResponse(mascota);</span>
+<span class="fc" id="L68">        Mascota mascota = mascotaRepository.findById(idMascota)</span>
+<span class="fc" id="L69">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Mascota no encontrada&quot;));</span>
+<span class="fc" id="L70">        return new MascotaResponse(mascota);</span>
     }
 
     public java.util.Map&lt;String, Object&gt; getEstadisticas() {
-<span class="nc" id="L68">        long total = mascotaRepository.countTotal();</span>
-<span class="nc" id="L69">        long perdidas = mascotaRepository.countByEstado(EstadoMascota.PERDIDA);</span>
-<span class="nc" id="L70">        long encontradas = mascotaRepository.countByEstado(EstadoMascota.ENCONTRADA);</span>
-<span class="nc" id="L71">        long reunificadas = mascotaRepository.countByEstado(EstadoMascota.REUNIFICADA);</span>
-<span class="nc" id="L72">        java.util.Map&lt;String, Object&gt; stats = new java.util.HashMap&lt;&gt;();</span>
-<span class="nc" id="L73">        stats.put(&quot;total&quot;, total);</span>
-<span class="nc" id="L74">        stats.put(&quot;perdidas&quot;, perdidas);</span>
-<span class="nc" id="L75">        stats.put(&quot;encontradas&quot;, encontradas);</span>
-<span class="nc" id="L76">        stats.put(&quot;reunificadas&quot;, reunificadas);</span>
-<span class="nc" id="L77">        return stats;</span>
+<span class="fc" id="L74">        long total = mascotaRepository.countTotal();</span>
+<span class="fc" id="L75">        long perdidas = mascotaRepository.countByEstado(EstadoMascota.PERDIDA);</span>
+<span class="fc" id="L76">        long encontradas = mascotaRepository.countByEstado(EstadoMascota.ENCONTRADA);</span>
+<span class="fc" id="L77">        long reunificadas = mascotaRepository.countByEstado(EstadoMascota.REUNIFICADA);</span>
+<span class="fc" id="L78">        java.util.Map&lt;String, Object&gt; stats = new java.util.HashMap&lt;&gt;();</span>
+<span class="fc" id="L79">        stats.put(&quot;total&quot;, total);</span>
+<span class="fc" id="L80">        stats.put(&quot;perdidas&quot;, perdidas);</span>
+<span class="fc" id="L81">        stats.put(&quot;encontradas&quot;, encontradas);</span>
+<span class="fc" id="L82">        stats.put(&quot;reunificadas&quot;, reunificadas);</span>
+<span class="fc" id="L83">        return stats;</span>
     }
 
     @Transactional
     public MascotaResponse registrarMascota(MascotaRequest request, String userId) {
-<span class="fc" id="L82">        Mascota mascota = Mascota.builder()</span>
-<span class="fc" id="L83">                .idMascota(UUID.randomUUID().toString())</span>
-<span class="fc" id="L84">                .idUsuario(userId)</span>
-<span class="fc" id="L85">                .tipoAnimal(request.getTipoAnimal())</span>
-<span class="fc" id="L86">                .raza(request.getRaza())</span>
-<span class="fc" id="L87">                .nombre(request.getNombre())</span>
-<span class="fc" id="L88">                .colorPrimario(request.getColorPrimario())</span>
-<span class="fc" id="L89">                .tamano(request.getTamano())</span>
-<span class="fc" id="L90">                .sexo(request.getSexo())</span>
-<span class="fc" id="L91">                .edad(request.getEdad())</span>
-<span class="fc" id="L92">                .fotoUrl(request.getFotoUrl())</span>
-<span class="pc bpc" id="L93" title="1 of 2 branches missed.">                .latitud(request.getLatitud() != null ? request.getLatitud() : -36.8201)</span>
-<span class="pc bpc" id="L94" title="1 of 2 branches missed.">                .longitud(request.getLongitud() != null ? request.getLongitud() : -73.0444)</span>
-<span class="fc" id="L95">                .sector(request.getSector())</span>
-<span class="fc" id="L96">                .comuna(request.getComuna())</span>
-<span class="fc" id="L97">                .direccion(request.getDireccion())</span>
-<span class="fc" id="L98">                .estado(request.getEstado())</span>
-<span class="fc" id="L99">                .descripcion(request.getDescripcion())</span>
-<span class="fc" id="L100">                .contacto(request.getContacto())</span>
-<span class="fc" id="L101">                .telefono(request.getTelefono())</span>
-<span class="fc" id="L102">                .fechaReporte(LocalDateTime.now())</span>
-<span class="fc" id="L103">                .build();</span>
+<span class="fc" id="L88">        Mascota mascota = Mascota.builder()</span>
+<span class="fc" id="L89">                .idMascota(UUID.randomUUID().toString())</span>
+<span class="fc" id="L90">                .idUsuario(userId)</span>
+<span class="fc" id="L91">                .tipoAnimal(request.getTipoAnimal())</span>
+<span class="fc" id="L92">                .raza(request.getRaza())</span>
+<span class="fc" id="L93">                .nombre(request.getNombre())</span>
+<span class="fc" id="L94">                .colorPrimario(request.getColorPrimario())</span>
+<span class="fc" id="L95">                .tamano(request.getTamano())</span>
+<span class="fc" id="L96">                .sexo(request.getSexo())</span>
+<span class="fc" id="L97">                .edad(request.getEdad())</span>
+<span class="fc" id="L98">                .fotoUrl(request.getFotoUrl())</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">                .latitud(request.getLatitud() != null ? request.getLatitud() : -36.8201)</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">                .longitud(request.getLongitud() != null ? request.getLongitud() : -73.0444)</span>
+<span class="fc" id="L101">                .sector(request.getSector())</span>
+<span class="fc" id="L102">                .comuna(request.getComuna())</span>
+<span class="fc" id="L103">                .direccion(request.getDireccion())</span>
+<span class="fc" id="L104">                .estado(request.getEstado())</span>
+<span class="fc" id="L105">                .descripcion(request.getDescripcion())</span>
+<span class="fc" id="L106">                .contacto(request.getContacto())</span>
+<span class="fc" id="L107">                .telefono(request.getTelefono())</span>
+<span class="fc" id="L108">                .fechaReporte(LocalDateTime.now())</span>
+<span class="fc" id="L109">                .build();</span>
 
-<span class="fc" id="L105">        Mascota saved = mascotaRepository.save(mascota);</span>
-<span class="fc" id="L106">        eventPublisher.publishEvent(new MascotaReportadaEvent(saved));</span>
-<span class="fc" id="L107">        return new MascotaResponse(saved);</span>
+<span class="fc" id="L111">        Mascota saved = mascotaRepository.save(mascota);</span>
+<span class="fc" id="L112">        eventPublisher.publishEvent(new MascotaReportadaEvent(saved));</span>
+<span class="fc" id="L113">        return new MascotaResponse(saved);</span>
     }
 
     @Transactional
     public MascotaResponse actualizarMascota(String idMascota, MascotaRequest request, String userId) {
-<span class="nc" id="L112">        Mascota mascota = mascotaRepository.findById(idMascota)</span>
-<span class="nc" id="L113">                .orElseThrow(() -&gt; new RuntimeException(&quot;Mascota no encontrada&quot;));</span>
+<span class="fc" id="L118">        Mascota mascota = mascotaRepository.findById(idMascota)</span>
+<span class="fc" id="L119">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Mascota no encontrada&quot;));</span>
 
-<span class="nc bnc" id="L115" title="All 2 branches missed.">        if (!mascota.getIdUsuario().equals(userId)) {</span>
-<span class="nc" id="L116">            throw new RuntimeException(&quot;No tiene permisos para modificar esta mascota&quot;);</span>
+        // Admins, refugios y municipalidad pueden modificar cualquier mascota
+        // Solo los dueños normales están restringidos a sus propias mascotas
+<span class="fc" id="L123">        boolean esModerador = false;</span>
+        try {
+            // El rol viene en el JWT y se inyecta como atributo de request en el interceptor
+            // Para simplicidad verificamos si el usuario es el dueño; si no, asumimos que
+            // el controller ya validó el rol antes de llamar aquí.
+            // El controller pasa el rol en userId como &quot;userId|rol&quot;
+<span class="pc bpc" id="L129" title="1 of 4 branches missed.">            if (userId != null &amp;&amp; userId.contains(&quot;|&quot;)) {</span>
+<span class="fc" id="L130">                String rol = userId.split(&quot;\\|&quot;)[1];</span>
+<span class="pc bpc" id="L131" title="5 of 6 branches missed.">                esModerador = rol.equals(&quot;ADMIN&quot;) || rol.equals(&quot;REFUGIO&quot;) || rol.equals(&quot;MUNICIPALIDAD&quot;);</span>
+<span class="fc" id="L132">                userId = userId.split(&quot;\\|&quot;)[0];</span>
+            }
+<span class="pc" id="L134">        } catch (Exception ignored) {}</span>
+
+<span class="fc bfc" id="L136" title="All 4 branches covered.">        if (!esModerador &amp;&amp; !mascota.getIdUsuario().equals(userId)) {</span>
+<span class="fc" id="L137">            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;No tiene permisos para modificar esta mascota&quot;);</span>
         }
 
-<span class="nc" id="L119">        mascota.setTipoAnimal(request.getTipoAnimal());</span>
-<span class="nc" id="L120">        mascota.setRaza(request.getRaza());</span>
-<span class="nc" id="L121">        mascota.setNombre(request.getNombre());</span>
-<span class="nc" id="L122">        mascota.setColorPrimario(request.getColorPrimario());</span>
-<span class="nc" id="L123">        mascota.setTamano(request.getTamano());</span>
-<span class="nc" id="L124">        mascota.setSexo(request.getSexo());</span>
-<span class="nc" id="L125">        mascota.setEdad(request.getEdad());</span>
-<span class="nc" id="L126">        mascota.setFotoUrl(request.getFotoUrl());</span>
-<span class="nc" id="L127">        mascota.setLatitud(request.getLatitud());</span>
-<span class="nc" id="L128">        mascota.setLongitud(request.getLongitud());</span>
-<span class="nc" id="L129">        mascota.setSector(request.getSector());</span>
-<span class="nc" id="L130">        mascota.setComuna(request.getComuna());</span>
-<span class="nc" id="L131">        mascota.setDireccion(request.getDireccion());</span>
-<span class="nc" id="L132">        mascota.setDescripcion(request.getDescripcion());</span>
-<span class="nc" id="L133">        mascota.setContacto(request.getContacto());</span>
-<span class="nc" id="L134">        mascota.setTelefono(request.getTelefono());</span>
+<span class="fc" id="L140">        mascota.setTipoAnimal(request.getTipoAnimal());</span>
+<span class="fc" id="L141">        mascota.setRaza(request.getRaza());</span>
+<span class="fc" id="L142">        mascota.setNombre(request.getNombre());</span>
+<span class="fc" id="L143">        mascota.setColorPrimario(request.getColorPrimario());</span>
+<span class="fc" id="L144">        mascota.setTamano(request.getTamano());</span>
+<span class="fc" id="L145">        mascota.setSexo(request.getSexo());</span>
+<span class="fc" id="L146">        mascota.setEdad(request.getEdad());</span>
+<span class="fc" id="L147">        mascota.setFotoUrl(request.getFotoUrl());</span>
+<span class="fc" id="L148">        mascota.setLatitud(request.getLatitud());</span>
+<span class="fc" id="L149">        mascota.setLongitud(request.getLongitud());</span>
+<span class="fc" id="L150">        mascota.setSector(request.getSector());</span>
+<span class="fc" id="L151">        mascota.setComuna(request.getComuna());</span>
+<span class="fc" id="L152">        mascota.setDireccion(request.getDireccion());</span>
+<span class="fc" id="L153">        mascota.setDescripcion(request.getDescripcion());</span>
+<span class="fc" id="L154">        mascota.setContacto(request.getContacto());</span>
+<span class="fc" id="L155">        mascota.setTelefono(request.getTelefono());</span>
 
-<span class="nc bnc" id="L136" title="All 4 branches missed.">        if (request.getEstado() != null &amp;&amp; mascota.getEstado() != request.getEstado()) {</span>
-<span class="nc" id="L137">            mascota.setEstado(request.getEstado());</span>
+<span class="pc bpc" id="L157" title="2 of 4 branches missed.">        if (request.getEstado() != null &amp;&amp; mascota.getEstado() != request.getEstado()) {</span>
+<span class="fc" id="L158">            mascota.setEstado(request.getEstado());</span>
         }
 
-<span class="nc" id="L140">        Mascota updated = mascotaRepository.save(mascota);</span>
-<span class="nc" id="L141">        return new MascotaResponse(updated);</span>
+<span class="fc" id="L161">        Mascota updated = mascotaRepository.save(mascota);</span>
+<span class="fc" id="L162">        return new MascotaResponse(updated);</span>
     }
 
     @Transactional
     public void eliminarMascota(String idMascota, String userId) {
-<span class="nc" id="L146">        Mascota mascota = mascotaRepository.findById(idMascota)</span>
-<span class="nc" id="L147">                .orElseThrow(() -&gt; new RuntimeException(&quot;Mascota no encontrada&quot;));</span>
+<span class="fc" id="L167">        Mascota mascota = mascotaRepository.findById(idMascota)</span>
+<span class="fc" id="L168">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Mascota no encontrada&quot;));</span>
 
-<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (!mascota.getIdUsuario().equals(userId)) {</span>
-<span class="nc" id="L150">            throw new RuntimeException(&quot;No tiene permisos para eliminar esta mascota&quot;);</span>
+<span class="fc" id="L170">        boolean esModerador = false;</span>
+        try {
+<span class="pc bpc" id="L172" title="1 of 4 branches missed.">            if (userId != null &amp;&amp; userId.contains(&quot;|&quot;)) {</span>
+<span class="fc" id="L173">                String rol = userId.split(&quot;\\|&quot;)[1];</span>
+<span class="pc bpc" id="L174" title="5 of 6 branches missed.">                esModerador = rol.equals(&quot;ADMIN&quot;) || rol.equals(&quot;REFUGIO&quot;) || rol.equals(&quot;MUNICIPALIDAD&quot;);</span>
+<span class="fc" id="L175">                userId = userId.split(&quot;\\|&quot;)[0];</span>
+            }
+<span class="pc" id="L177">        } catch (Exception ignored) {}</span>
+
+<span class="fc bfc" id="L179" title="All 4 branches covered.">        if (!esModerador &amp;&amp; !mascota.getIdUsuario().equals(userId)) {</span>
+<span class="fc" id="L180">            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;No tiene permisos para eliminar esta mascota&quot;);</span>
         }
 
-<span class="nc" id="L153">        mascotaRepository.delete(mascota);</span>
-<span class="nc" id="L154">    }</span>
+<span class="fc" id="L183">        mascotaRepository.delete(mascota);</span>
+<span class="fc" id="L184">    }</span>
 
     // ── Reportes de encuentro ───────────────────────────────────────────────
 
     @Transactional
-    public void reportarEncuentro(String idMascota, Map&lt;String, Object&gt; body) {
-<span class="nc" id="L160">        mascotaRepository.findById(idMascota)</span>
-<span class="nc" id="L161">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Mascota no encontrada&quot;));</span>
+    public void reportarEncuentro(String idMascota, ReporteEncuentroRequest request) {
+<span class="fc" id="L190">        mascotaRepository.findById(idMascota)</span>
+<span class="fc" id="L191">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Mascota no encontrada&quot;));</span>
 
-<span class="nc" id="L163">        ReporteEncuentro reporte = ReporteEncuentro.builder()</span>
-<span class="nc" id="L164">                .idReporteEncuentro(UUID.randomUUID().toString())</span>
-<span class="nc" id="L165">                .idMascota(idMascota)</span>
-<span class="nc" id="L166">                .fotoEvidenciaUrl((String) body.get(&quot;foto_evidencia_url&quot;))</span>
-<span class="nc" id="L167">                .encontradaEn((String) body.get(&quot;encontrada_en&quot;))</span>
-<span class="nc" id="L168">                .contactoNombre((String) body.get(&quot;contacto_nombre&quot;))</span>
-<span class="nc" id="L169">                .contactoTelefono((String) body.get(&quot;contacto_telefono&quot;))</span>
-<span class="nc" id="L170">                .estadoRevision(EstadoRevision.EN_REVISION)</span>
-<span class="nc" id="L171">                .build();</span>
+<span class="fc" id="L193">        ReporteEncuentro reporte = ReporteEncuentro.builder()</span>
+<span class="fc" id="L194">                .idReporteEncuentro(UUID.randomUUID().toString())</span>
+<span class="fc" id="L195">                .idMascota(idMascota)</span>
+<span class="fc" id="L196">                .fotoEvidenciaUrl(request.getFotoEvidenciaUrl())</span>
+<span class="fc" id="L197">                .encontradaEn(request.getEncontradaEn())</span>
+<span class="fc" id="L198">                .contactoNombre(request.getContactoNombre())</span>
+<span class="fc" id="L199">                .contactoTelefono(request.getContactoTelefono())</span>
+<span class="fc" id="L200">                .estadoRevision(EstadoRevision.EN_REVISION)</span>
+<span class="fc" id="L201">                .build();</span>
 
-<span class="nc" id="L173">        reporteEncuentroRepository.save(reporte);</span>
-<span class="nc" id="L174">    }</span>
+<span class="fc" id="L203">        reporteEncuentroRepository.save(reporte);</span>
+<span class="fc" id="L204">    }</span>
 
     public List&lt;Map&lt;String, Object&gt;&gt; getEncuentrosRevision() {
-<span class="nc" id="L177">        List&lt;Object[]&gt; rows = reporteEncuentroRepository.findReportesJoined(null);</span>
-<span class="nc" id="L178">        List&lt;Map&lt;String, Object&gt;&gt; result = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L179" title="All 2 branches missed.">        for (Object[] row : rows) {</span>
-<span class="nc" id="L180">            Map&lt;String, Object&gt; m = new HashMap&lt;&gt;();</span>
-<span class="nc" id="L181">            m.put(&quot;idReporteEncuentro&quot;, row[0]);</span>
-<span class="nc" id="L182">            m.put(&quot;idMascota&quot;,          row[1]);</span>
-<span class="nc" id="L183">            m.put(&quot;fotoEvidenciaUrl&quot;,   row[2]);</span>
-<span class="nc" id="L184">            m.put(&quot;encontradaEn&quot;,       row[3]);</span>
-<span class="nc" id="L185">            m.put(&quot;contactoNombre&quot;,     row[4]);</span>
-<span class="nc" id="L186">            m.put(&quot;contactoTelefono&quot;,   row[5]);</span>
-<span class="nc bnc" id="L187" title="All 2 branches missed.">            m.put(&quot;estadoRevision&quot;,     row[6] != null ? row[6].toString() : null);</span>
-<span class="nc" id="L188">            m.put(&quot;fechaReporte&quot;,       row[7]);</span>
-<span class="nc" id="L189">            m.put(&quot;fechaRevision&quot;,      row[8]);</span>
-<span class="nc" id="L190">            m.put(&quot;mascotaNombre&quot;,      row[9]);</span>
-<span class="nc" id="L191">            m.put(&quot;tipoAnimal&quot;,         row[10]);</span>
-<span class="nc" id="L192">            m.put(&quot;mascotaFoto&quot;,        row[11]);</span>
-<span class="nc" id="L193">            result.add(m);</span>
-<span class="nc" id="L194">        }</span>
-<span class="nc" id="L195">        return result;</span>
+<span class="nc" id="L207">        List&lt;Object[]&gt; rows = reporteEncuentroRepository.findReportesJoined(null);</span>
+<span class="nc" id="L208">        List&lt;Map&lt;String, Object&gt;&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        for (Object[] row : rows) {</span>
+<span class="nc" id="L210">            Map&lt;String, Object&gt; m = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L211">            m.put(&quot;idReporteEncuentro&quot;, row[0]);</span>
+<span class="nc" id="L212">            m.put(&quot;idMascota&quot;,          row[1]);</span>
+<span class="nc" id="L213">            m.put(&quot;fotoEvidenciaUrl&quot;,   row[2]);</span>
+<span class="nc" id="L214">            m.put(&quot;encontradaEn&quot;,       row[3]);</span>
+<span class="nc" id="L215">            m.put(&quot;contactoNombre&quot;,     row[4]);</span>
+<span class="nc" id="L216">            m.put(&quot;contactoTelefono&quot;,   row[5]);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">            m.put(&quot;estadoRevision&quot;,     row[6] != null ? row[6].toString() : null);</span>
+<span class="nc" id="L218">            m.put(&quot;fechaReporte&quot;,       row[7]);</span>
+<span class="nc" id="L219">            m.put(&quot;fechaRevision&quot;,      row[8]);</span>
+<span class="nc" id="L220">            m.put(&quot;mascotaNombre&quot;,      row[9]);</span>
+<span class="nc" id="L221">            m.put(&quot;tipoAnimal&quot;,         row[10]);</span>
+<span class="nc" id="L222">            m.put(&quot;mascotaFoto&quot;,        row[11]);</span>
+<span class="nc" id="L223">            result.add(m);</span>
+<span class="nc" id="L224">        }</span>
+<span class="nc" id="L225">        return result;</span>
     }
 
     @Transactional
     public void revisarEncuentro(String idReporte, String accion) {
-<span class="nc" id="L200">        ReporteEncuentro reporte = reporteEncuentroRepository.findById(idReporte)</span>
-<span class="nc" id="L201">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Reporte no encontrado&quot;));</span>
+<span class="fc" id="L230">        ReporteEncuentro reporte = reporteEncuentroRepository.findById(idReporte)</span>
+<span class="fc" id="L231">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Reporte no encontrado&quot;));</span>
 
-<span class="nc bnc" id="L203" title="All 2 branches missed.">        EstadoRevision nuevoEstado = &quot;APROBAR&quot;.equalsIgnoreCase(accion)</span>
-<span class="nc" id="L204">                ? EstadoRevision.APROBADO : EstadoRevision.RECHAZADO;</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">        EstadoRevision nuevoEstado = &quot;APROBAR&quot;.equalsIgnoreCase(accion)</span>
+<span class="fc" id="L234">                ? EstadoRevision.APROBADO : EstadoRevision.RECHAZADO;</span>
 
-<span class="nc" id="L206">        reporte.setEstadoRevision(nuevoEstado);</span>
-<span class="nc" id="L207">        reporte.setFechaRevision(LocalDateTime.now());</span>
-<span class="nc" id="L208">        reporteEncuentroRepository.save(reporte);</span>
+<span class="fc" id="L236">        reporte.setEstadoRevision(nuevoEstado);</span>
+<span class="fc" id="L237">        reporte.setFechaRevision(LocalDateTime.now());</span>
+<span class="fc" id="L238">        reporteEncuentroRepository.save(reporte);</span>
 
         // Si se aprueba, marcar mascota como REUNIFICADA
-<span class="nc bnc" id="L211" title="All 2 branches missed.">        if (nuevoEstado == EstadoRevision.APROBADO) {</span>
-<span class="nc" id="L212">            mascotaRepository.findById(reporte.getIdMascota()).ifPresent(mascota -&gt; {</span>
-<span class="nc" id="L213">                mascota.setEstado(EstadoMascota.REUNIFICADA);</span>
-<span class="nc" id="L214">                mascotaRepository.save(mascota);</span>
-<span class="nc" id="L215">                eventPublisher.publishEvent(new MascotaReunificadaEvent(mascota));</span>
-<span class="nc" id="L216">            });</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">        if (nuevoEstado == EstadoRevision.APROBADO) {</span>
+<span class="fc" id="L242">            mascotaRepository.findById(reporte.getIdMascota()).ifPresent(mascota -&gt; {</span>
+<span class="fc" id="L243">                mascota.setEstado(EstadoMascota.REUNIFICADA);</span>
+<span class="fc" id="L244">                mascotaRepository.save(mascota);</span>
+<span class="fc" id="L245">                eventPublisher.publishEvent(new MascotaReunificadaEvent(mascota));</span>
+<span class="fc" id="L246">            });</span>
         }
-<span class="nc" id="L218">    }</span>
+<span class="fc" id="L248">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

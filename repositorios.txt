@@ -1,7 +1,8 @@
-REPOSITORIOS SANOS Y SALVOS!!!!!!!!
+
+REPOSITORIOS SANOS Y SALVOS
 
 
-PROYECTO PRINCIPAL (BACKEND): https://github.com/MaiSaldivia/sanos-y-salvos-backend.git
+PRINCIPAL (BACKEND): https://github.com/MaiSaldivia/sanos-y-salvos-backend.git
 
 FRONTEND: https://github.com/MaiSaldivia/sanos-y-salvos-frontend.git
 

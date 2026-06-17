@@ -6,10 +6,10 @@ public class AlertaHallazgo extends Alerta {
     private final String descripcion;
 
     public AlertaHallazgo(String idMascota, String contacto, String sector, String tipoAnimal, String descripcion) {
-<span class="nc" id="L9">        super(idMascota, contacto, sector);</span>
-<span class="nc bnc" id="L10" title="All 2 branches missed.">        this.tipoAnimal = tipoAnimal != null ? tipoAnimal : &quot;Animal&quot;;</span>
-<span class="nc bnc" id="L11" title="All 2 branches missed.">        this.descripcion = descripcion != null ? descripcion : &quot;&quot;;</span>
-<span class="nc" id="L12">    }</span>
+<span class="fc" id="L9">        super(idMascota, contacto, sector);</span>
+<span class="pc bpc" id="L10" title="1 of 2 branches missed.">        this.tipoAnimal = tipoAnimal != null ? tipoAnimal : &quot;Animal&quot;;</span>
+<span class="pc bpc" id="L11" title="1 of 2 branches missed.">        this.descripcion = descripcion != null ? descripcion : &quot;&quot;;</span>
+<span class="fc" id="L12">    }</span>
 
     @Override
     public String getMensaje() {

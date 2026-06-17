@@ -134,7 +134,6 @@ input, select, textarea { font-family: var(--font-body); outline: none; }
   overflow: hidden;
 }
 
-/* Ripple sutil en todos los botones */
 .btn::after {
   content: '';
   position: absolute;
@@ -442,7 +441,6 @@ textarea.form-input { resize: vertical; min-height: 100px; }
   gap: 26px;
 }
 
-/* Stagger de entrada */
 .mascotas-grid > * {
   animation: fadeUp 0.4s var(--ease) backwards;
 }

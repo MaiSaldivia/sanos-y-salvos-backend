@@ -199,7 +199,7 @@ export default function Mascotas() {
             </div>
             <div className="modal-body">
               <p style={{ color: 'var(--stone)', marginBottom: '20px' }}>
-                Mascota: <strong>{modalMascota.nombre}</strong> ({modalMascota.tipo_animal})
+                Mascota: <strong>{modalMascota.nombre}</strong> ({modalMascota.tipoAnimal ?? modalMascota.tipo_animal})
               </p>
               <div className="form-group">
                 <label className="form-label">Nuevo estado</label>
@@ -229,7 +229,7 @@ export default function Mascotas() {
             </div>
             <div className="modal-body">
               <p style={{ color: 'var(--stone)', marginBottom: '20px' }}>
-                Mascota: <strong>{encuentroMascota.nombre}</strong> ({encuentroMascota.tipo_animal})
+                Mascota: <strong>{encuentroMascota.nombre}</strong> ({encuentroMascota.tipoAnimal ?? encuentroMascota.tipo_animal})
               </p>
 
               <div className="form-group" style={{ marginBottom: '12px' }}>

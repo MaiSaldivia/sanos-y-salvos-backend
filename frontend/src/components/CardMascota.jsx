@@ -14,7 +14,6 @@ export default function CardMascota({ mascota, onEstadoChange, onReportEncuentro
 
   const cfg = estadoConfig[mascota.estado] || estadoConfig.PERDIDA;
 
-  // Soporte para camelCase (backend real) y snake_case (legacy)
   const idMascota    = mascota.idMascota    ?? mascota.id_mascota;
   const fotoUrl      = mascota.fotoUrl      ?? mascota.foto_url;
   const tipoAnimal   = mascota.tipoAnimal   ?? mascota.tipo_animal;

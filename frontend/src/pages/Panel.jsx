@@ -55,10 +55,10 @@ export default function Panel() {
         {/* Estadísticas rápidas */}
         <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(160px, 1fr))', gap:16, marginBottom:32}}>
           {[
-            { label:'Total solicitudes',   val: solicitudes.length,                                         color:'#457b9d' },
-            { label:'En revisión',         val: solicitudes.filter(s=>s.estado_revision==='EN_REVISION').length, color:'#e9a010' },
-            { label:'Aprobadas',           val: solicitudes.filter(s=>s.estado_revision==='APROBADO').length,    color:'#2a9d8f' },
-            { label:'Rechazadas',          val: solicitudes.filter(s=>s.estado_revision==='RECHAZADO').length,   color:'#e63946' },
+            { label:'Total solicitudes',   val: solicitudes.length,                                                                                          color:'#457b9d' },
+            { label:'En revisión',         val: solicitudes.filter(s=>(s.estadoRevision ?? s.estado_revision)==='EN_REVISION').length,  color:'#e9a010' },
+            { label:'Aprobadas',           val: solicitudes.filter(s=>(s.estadoRevision ?? s.estado_revision)==='APROBADO').length,     color:'#2a9d8f' },
+            { label:'Rechazadas',          val: solicitudes.filter(s=>(s.estadoRevision ?? s.estado_revision)==='RECHAZADO').length,    color:'#e63946' },
           ].map(s => (
             <div key={s.label} className="card" style={{padding:20, textAlign:'center'}}>
               <div style={{fontSize:'2rem', fontWeight:700, color:s.color}}>{s.val}</div>

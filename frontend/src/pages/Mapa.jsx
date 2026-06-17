@@ -1,225 +1,342 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mascotasService } from '../services/api';
+import { mascotasService, geoService } from '../services/api';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import './Mapa.css';
 
-// Simple interactive dot-map (no external map library needed)
+// Fix Leaflet default icon paths (broken with Vite)
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+const ESTADO_COLOR = {
+  PERDIDA:    '#e53e3e',
+  ENCONTRADA: '#38a169',
+  REUNIFICADA:'#d69e2e',
+};
+
+const ESTADO_LABEL = {
+  PERDIDA:    'Perdida',
+  ENCONTRADA: 'Encontrada',
+  REUNIFICADA:'Reunificada',
+};
+
+// Concepción centro por defecto
+const DEFAULT_CENTER = [-36.8201, -73.0444];
+const DEFAULT_ZOOM   = 13;
+
 export default function Mapa() {
-  const [mascotas, setMascotas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
+  const navigate             = useNavigate();
+  const mapRef               = useRef(null);   // div del mapa
+  const leafletRef           = useRef(null);   // instancia L.map
+  const markersRef           = useRef([]);     // marcadores actuales
+  const heatLayerRef         = useRef(null);
+
+  const [mascotas,     setMascotas]     = useState([]);
+  const [loading,      setLoading]      = useState(true);
   const [filterEstado, setFilterEstado] = useState('');
-  const navigate = useNavigate();
-  const canvasRef = useRef(null);
+  const [selected,     setSelected]     = useState(null);
+  const [vistaCalor,   setVistaCalor]   = useState(false);
+  const [zonas,        setZonas]        = useState([]);
 
-  // Concepción bounding box
-  const BOUNDS = {
-    minLat: -36.90, maxLat: -36.76,
-    minLng: -73.12, maxLng: -72.98
-  };
-
+  // ── Cargar datos ─────────────────────────────────────────────────────
   useEffect(() => {
-    mascotasService.getAll().then(res => {
-      setMascotas(Array.isArray(res.data) ? res.data : []);
-    }).catch(() => {}).finally(() => setLoading(false));
+    Promise.all([
+      mascotasService.getAll().catch(() => ({ data: [] })),
+      geoService.getZonas().catch(() => ({ data: [] })),
+    ]).then(([mRes, zRes]) => {
+      const lista = Array.isArray(mRes.data) ? mRes.data : [];
+      setMascotas(lista);
+      const z = Array.isArray(zRes.data) ? zRes.data : [];
+      setZonas(z);
+    }).finally(() => setLoading(false));
   }, []);
+
+  // ── Inicializar mapa ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (loading || !mapRef.current || leafletRef.current) return;
+
+    const map = L.map(mapRef.current, {
+      center: DEFAULT_CENTER,
+      zoom:   DEFAULT_ZOOM,
+      zoomControl: true,
+    });
+
+    // Tile layer — OpenStreetMap (sin API key)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(map);
+
+    leafletRef.current = map;
+
+    return () => {
+      map.remove();
+      leafletRef.current = null;
+    };
+  }, [loading]);
+
+  // ── Actualizar marcadores cuando cambian filtros o datos ─────────────
+  useEffect(() => {
+    const map = leafletRef.current;
+    if (!map) return;
+
+    // Limpiar marcadores anteriores
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+    if (heatLayerRef.current) { heatLayerRef.current.remove(); heatLayerRef.current = null; }
+
+    const filtered = filterEstado
+      ? mascotas.filter(m => m.estado === filterEstado)
+      : mascotas;
+
+    const validas = filtered.filter(m =>
+      m.latitud != null && m.longitud != null &&
+      !isNaN(m.latitud) && !isNaN(m.longitud)
+    );
+
+    if (vistaCalor) {
+      // Mapa de calor con leaflet.heat
+      import('leaflet.heat').then(() => {
+        const points = validas.map(m => [m.latitud, m.longitud, 1]);
+        if (points.length === 0) return;
+        const heat = L.heatLayer(points, {
+          radius:    25,
+          blur:      15,
+          maxZoom:   17,
+          gradient:  { 0.2: '#38a169', 0.5: '#d69e2e', 0.8: '#e53e3e' },
+        }).addTo(map);
+        heatLayerRef.current = heat;
+      });
+      return;
+    }
+
+    // Marcadores normales
+    validas.forEach(m => {
+      const idM   = m.idMascota   ?? m.id_mascota;
+      const fotoM = m.fotoUrl     ?? m.foto_url;
+      const tipoM = m.tipoAnimal  ?? m.tipo_animal;
+      const color = ESTADO_COLOR[m.estado] || '#888';
+      const emoji = tipoM === 'Perro' ? '🐕' : tipoM === 'Gato' ? '🐈' : '🐾';
+
+      const icon = L.divIcon({
+        className: '',
+        html: `
+          <div class="map-pin" style="--pin-color:${color}">
+            <span class="pin-emoji">${emoji}</span>
+          </div>`,
+        iconSize:   [36, 36],
+        iconAnchor: [18, 36],
+        popupAnchor:[0, -36],
+      });
+
+      const marker = L.marker([m.latitud, m.longitud], { icon });
+
+      marker.bindPopup(`
+        <div class="map-popup">
+          ${fotoM ? `<img src="${fotoM}" alt="${m.nombre || 'Sin nombre'}" class="popup-img" onerror="this.style.display='none'"/>` : ''}
+          <div class="popup-body">
+            <div class="popup-header">
+              <strong>${m.nombre || 'Sin nombre'}</strong>
+              <span class="popup-badge" style="background:${color}20;color:${color};border:1px solid ${color}40">
+                ${ESTADO_LABEL[m.estado] || m.estado}
+              </span>
+            </div>
+            <p class="popup-tipo">${tipoM}${m.raza ? ` · ${m.raza}` : ''}</p>
+            ${m.sector ? `<p class="popup-sector">📍 ${m.sector}${m.comuna ? `, ${m.comuna}` : ''}</p>` : ''}
+            ${m.contacto ? `<p class="popup-contacto">📞 ${m.contacto}</p>` : ''}
+            <button class="popup-btn" onclick="window.__mapaNavigate('${idM}')">
+              Ver detalle →
+            </button>
+          </div>
+        </div>
+      `, { maxWidth: 260, className: 'leaflet-popup-custom' });
+
+      marker.on('click', () => setSelected(m));
+      marker.addTo(map);
+      markersRef.current.push(marker);
+    });
+
+    // Centrar mapa si hay marcadores
+    if (validas.length > 0 && markersRef.current.length > 0) {
+      const group = L.featureGroup(markersRef.current);
+      map.fitBounds(group.getBounds().pad(0.15), { maxZoom: 15 });
+    }
+  }, [mascotas, filterEstado, vistaCalor, leafletRef.current]);
+
+  // Puente para el botón dentro del popup (no puede usar navigate directamente)
+  useEffect(() => {
+    window.__mapaNavigate = (id) => navigate(`/mascotas/${id}`);
+    return () => { delete window.__mapaNavigate; };
+  }, [navigate]);
 
   const filtered = filterEstado
     ? mascotas.filter(m => m.estado === filterEstado)
     : mascotas;
 
-  const toXY = (lat, lng, w, h) => {
-    const x = ((lng - BOUNDS.minLng) / (BOUNDS.maxLng - BOUNDS.minLng)) * w;
-    const y = ((BOUNDS.maxLat - lat) / (BOUNDS.maxLat - BOUNDS.minLat)) * h;
-    return { x, y };
-  };
-
-  const estadoColor = {
-    PERDIDA: '#C0392B',
-    ENCONTRADA: '#2D7A4A',
-    REUNIFICADA: '#D4882A'
-  };
+  const perdidas    = mascotas.filter(m => m.estado === 'PERDIDA').length;
+  const encontradas = mascotas.filter(m => m.estado === 'ENCONTRADA').length;
+  const reunificadas= mascotas.filter(m => m.estado === 'REUNIFICADA').length;
 
   return (
     <div className="mapa-page page-enter">
       <div className="container">
-        <div className="page-header">
+
+        {/* Header */}
+        <div className="mapa-header">
           <div>
             <h1 className="page-title">Mapa de casos</h1>
-            <p className="page-sub">Microservicio de Geolocalización — zona Concepción, Chile</p>
+            <p className="page-sub">Zona Concepción · {filtered.length} casos visibles</p>
           </div>
-          <div className="mapa-filters">
-            {['', 'PERDIDA', 'ENCONTRADA', 'REUNIFICADA'].map(e => (
-              <button
-                key={e}
-                className={`btn btn-sm ${filterEstado === e ? 'btn-secondary' : 'btn-outline'}`}
-                onClick={() => setFilterEstado(e)}
-              >
-                {e === '' ? 'Todos' : e.charAt(0) + e.slice(1).toLowerCase()}
-              </button>
-            ))}
+          <div className="mapa-controls">
+            {/* Filtro estado */}
+            <div className="filter-group">
+              {[
+                { val: '',            label: 'Todos' },
+                { val: 'PERDIDA',     label: 'Perdidas' },
+                { val: 'ENCONTRADA',  label: 'Encontradas' },
+                { val: 'REUNIFICADA', label: 'Reunificadas' },
+              ].map(({ val, label }) => (
+                <button
+                  key={val}
+                  className={`filter-btn ${filterEstado === val ? 'active' : ''}`}
+                  style={filterEstado === val && val ? { '--btn-color': ESTADO_COLOR[val] } : {}}
+                  onClick={() => setFilterEstado(val)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {/* Toggle mapa calor */}
+            <button
+              className={`toggle-heat ${vistaCalor ? 'active' : ''}`}
+              onClick={() => setVistaCalor(v => !v)}
+              title="Alternar mapa de calor"
+            >
+              {vistaCalor ? 'Ver marcadores' : 'Ver mapa de calor'}
+            </button>
           </div>
         </div>
 
+        {/* Stats rápidas */}
+        <div className="mapa-stats">
+          <div className="stat-pill" style={{'--c':'#e53e3e'}}>
+            <span className="stat-dot"></span>
+            <span>{perdidas} perdidas</span>
+          </div>
+          <div className="stat-pill" style={{'--c':'#38a169'}}>
+            <span className="stat-dot"></span>
+            <span>{encontradas} encontradas</span>
+          </div>
+          <div className="stat-pill" style={{'--c':'#d69e2e'}}>
+            <span className="stat-dot"></span>
+            <span>{reunificadas} reunificadas</span>
+          </div>
+          {zonas.length > 0 && (
+            <div className="stat-pill" style={{'--c':'#3b82f6'}}>
+              <span className="stat-dot"></span>
+              <span>{zonas.length} zonas críticas</span>
+            </div>
+          )}
+        </div>
+
         <div className="mapa-layout">
-          {/* Map */}
-          <div className="mapa-container card">
-            {loading ? (
-              <div className="loader"><div className="spinner"></div></div>
-            ) : (
-              <div className="mapa-svg-wrap">
-                <svg
-                  viewBox="0 0 700 460"
-                  className="mapa-svg"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  {/* Background */}
-                  <rect width="700" height="460" fill="#E8F0E8" rx="12"/>
-
-                  {/* Grid lines */}
-                  {[...Array(7)].map((_, i) => (
-                    <line key={`v${i}`} x1={i*100} y1="0" x2={i*100} y2="460"
-                      stroke="rgba(255,255,255,0.5)" strokeWidth="0.5"/>
-                  ))}
-                  {[...Array(5)].map((_, i) => (
-                    <line key={`h${i}`} x1="0" y1={i*100} x2="700" y2={i*100}
-                      stroke="rgba(255,255,255,0.5)" strokeWidth="0.5"/>
-                  ))}
-
-                  {/* River (Río Biobío) */}
-                  <path
-                    d="M 0 380 Q 120 360 200 375 Q 350 390 500 370 Q 620 355 700 360"
-                    fill="none" stroke="#7BC8F5" strokeWidth="14" opacity="0.7"/>
-                  <text x="160" y="398" fontSize="10" fill="#5AAFE0" fontFamily="sans-serif">Río Biobío</text>
-
-                  {/* City zones */}
-                  <ellipse cx="350" cy="200" rx="120" ry="80" fill="rgba(255,255,255,0.15)"/>
-                  <text x="350" y="148" textAnchor="middle" fontSize="11"
-                    fill="#2D4A3E" fontFamily="sans-serif" fontWeight="600">Centro Concepción</text>
-
-                  <ellipse cx="180" cy="280" rx="70" ry="45" fill="rgba(255,255,255,0.12)"/>
-                  <text x="180" y="342" textAnchor="middle" fontSize="10"
-                    fill="#2D4A3E" fontFamily="sans-serif">Hualpén</text>
-
-                  <ellipse cx="540" cy="180" rx="80" ry="55" fill="rgba(255,255,255,0.12)"/>
-                  <text x="540" y="145" textAnchor="middle" fontSize="10"
-                    fill="#2D4A3E" fontFamily="sans-serif">San Pedro</text>
-
-                  {/* Pins */}
-                  {filtered.map(m => {
-                    const idM  = m.idMascota  ?? m.id_mascota;
-                    const fotoM= m.fotoUrl    ?? m.foto_url;
-                    const tipoM= m.tipoAnimal ?? m.tipo_animal;
-                    const { x, y } = toXY(m.latitud, m.longitud, 700, 460);
-                    const color = estadoColor[m.estado] || '#888';
-                    const isSelected = selected?.idMascota === idM || selected?.id_mascota === idM;
-                    return (
-                      <g key={idM}
-                        onClick={() => setSelected(isSelected ? null : m)}
-                        style={{ cursor: 'pointer' }}
-                        transform={`translate(${x}, ${y})`}
-                      >
-                        <circle
-                          r={isSelected ? 16 : 11}
-                          fill={color}
-                          opacity="0.9"
-                          stroke="white"
-                          strokeWidth={isSelected ? 3 : 2}
-                        />
-                        <text y="4" textAnchor="middle" fontSize="10" fill="white">
-                          {tipoM === 'Perro' ? '🐕' : tipoM === 'Gato' ? '🐈' : '🐾'}
-                        </text>
-                        {isSelected && (
-                          <text y="-22" textAnchor="middle" fontSize="11"
-                            fill={color} fontWeight="700" fontFamily="sans-serif"
-                            style={{filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'}}>
-                            {m.nombre}
-                          </text>
-                        )}
-                      </g>
-                    );
-                  })}
-                </svg>
-
-                {/* Legend */}
-                <div className="mapa-legend">
-                  <span className="legend-item"><span className="dot" style={{background:'#C0392B'}}></span> Perdida</span>
-                  <span className="legend-item"><span className="dot" style={{background:'#2D7A4A'}}></span> Encontrada</span>
-                  <span className="legend-item"><span className="dot" style={{background:'#D4882A'}}></span> Reunificada</span>
-                </div>
+          {/* Mapa */}
+          <div className="mapa-wrap card">
+            {loading && (
+              <div className="mapa-loader">
+                <div className="spinner"></div>
               </div>
             )}
+            <div ref={mapRef} className="mapa-leaflet" />
           </div>
 
           {/* Sidebar */}
           <div className="mapa-sidebar">
-            {selected ? (
+
+            {/* Card seleccionada */}
+            {selected && (
               <div className="selected-card card">
-                <img
-                  src={selected.fotoUrl ?? selected.foto_url}
-                  alt={selected.nombre}
-                  className="selected-img"
-                  onError={e => e.target.src='https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=300&q=80'}
-                />
+                <div className="selected-estado" style={{ background: ESTADO_COLOR[selected.estado] }}>
+                  {ESTADO_LABEL[selected.estado]}
+                </div>
+                {(selected.fotoUrl ?? selected.foto_url) && (
+                  <img
+                    src={selected.fotoUrl ?? selected.foto_url}
+                    alt={selected.nombre}
+                    className="selected-img"
+                    onError={e => e.target.style.display = 'none'}
+                  />
+                )}
                 <div className="selected-body">
-                  <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px'}}>
-                    <h3>{selected.nombre}</h3>
-                    <span className={`tag tag-${selected.estado.toLowerCase()}`}>{selected.estado}</span>
+                  <h3>{selected.nombre || 'Sin nombre'}</h3>
+                  <p>{selected.tipoAnimal ?? selected.tipo_animal}{selected.raza ? ` · ${selected.raza}` : ''}</p>
+                  {selected.sector && <p>📍 {selected.sector}{selected.comuna ? `, ${selected.comuna}` : ''}</p>}
+                  {selected.contacto && <p>📞 {selected.contacto}</p>}
+                  <div className="selected-actions">
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => navigate(`/mascotas/${selected.idMascota ?? selected.id_mascota}`)}
+                    >
+                      Ver detalle completo →
+                    </button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setSelected(null)}>
+                      Cerrar
+                    </button>
                   </div>
-                  <p><strong>Tipo:</strong> {selected.tipoAnimal ?? selected.tipo_animal}</p>
-                  <p><strong>Raza:</strong> {selected.raza}</p>
-                  <p><strong>Sector:</strong> {selected.sector}</p>
-                  <p><strong>Contacto:</strong> {selected.contacto}</p>
-                  <button
-                    className="btn btn-primary btn-sm"
-                    style={{marginTop:'12px',width:'100%',justifyContent:'center'}}
-                    onClick={() => navigate(`/mascotas/${selected.idMascota ?? selected.id_mascota}`)}
-                  >
-                    Ver detalle completo →
-                  </button>
                 </div>
               </div>
-            ) : (
-              <div className="mapa-lista">
-                <h3 className="lista-title">Casos en el mapa ({filtered.length})</h3>
+            )}
+
+            {/* Lista de casos */}
+            <div className="mapa-lista card">
+              <h3 className="lista-title">Casos ({filtered.length})</h3>
+              <div className="lista-scroll">
                 {filtered.length === 0 ? (
-                  <p style={{color:'var(--stone-light)',fontSize:'0.88rem'}}>Sin casos con este filtro</p>
+                  <p className="lista-empty">Sin casos con este filtro</p>
                 ) : (
                   filtered.map(m => {
-                    const idM = m.idMascota ?? m.id_mascota;
+                    const idM   = m.idMascota  ?? m.id_mascota;
+                    const tipoM = m.tipoAnimal ?? m.tipo_animal;
+                    const isActive = (selected?.idMascota ?? selected?.id_mascota) === idM;
                     return (
-                    <button
-                      key={idM}
-                      className="lista-item"
-                      onClick={() => setSelected(m)}
-                    >
-                      <span className={`dot dot-sm`} style={{background: estadoColor[m.estado]}}></span>
-                      <span className="lista-nombre">{m.nombre}</span>
-                      <span className="lista-tipo">{m.tipoAnimal ?? m.tipo_animal}</span>
-                      <span className="lista-sector">{m.sector}</span>
-                    </button>
+                      <button
+                        key={idM}
+                        className={`lista-item ${isActive ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelected(isActive ? null : m);
+                          // Centrar mapa en el marcador
+                          if (!isActive && m.latitud && leafletRef.current) {
+                            leafletRef.current.setView([m.latitud, m.longitud], 16);
+                          }
+                        }}
+                      >
+                        <span className="lista-dot" style={{ background: ESTADO_COLOR[m.estado] }}></span>
+                        <span className="lista-nombre">{m.nombre || 'Sin nombre'}</span>
+                        <span className="lista-tipo">{tipoM}</span>
+                      </button>
                     );
                   })
                 )}
               </div>
-            )}
-
-            {/* Zona stats */}
-            <div className="zona-stats card">
-              <h4>📊 Estadísticas de zona</h4>
-              <div className="zona-row">
-                <span>Total en mapa:</span>
-                <strong>{filtered.length}</strong>
-              </div>
-              <div className="zona-row">
-                <span>🔴 Perdidas:</span>
-                <strong>{filtered.filter(m=>m.estado==='PERDIDA').length}</strong>
-              </div>
-              <div className="zona-row">
-                <span>🟢 Encontradas:</span>
-                <strong>{filtered.filter(m=>m.estado==='ENCONTRADA').length}</strong>
-              </div>
             </div>
+
+            {/* Zonas críticas */}
+            {zonas.length > 0 && (
+              <div className="zonas-card card">
+                <h3 className="lista-title">Zonas críticas</h3>
+                {zonas.slice(0, 5).map((z, i) => (
+                  <div key={i} className="zona-row">
+                    <span>{z.comuna ?? z.nombreZona ?? `Zona ${i + 1}`}</span>
+                    <strong>{z.totalReportes ?? z.total ?? '—'}</strong>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

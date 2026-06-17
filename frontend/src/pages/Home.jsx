@@ -88,10 +88,10 @@ export default function Home() {
             </p>
             <div className="hero-ctas">
               <Link to="/reportar" className="btn btn-primary btn-lg">
-                🔔 Reportar mascota
+                Reportar mascota
               </Link>
               <Link to="/mascotas" className="btn btn-outline btn-lg">
-                🔍 Ver todos los reportes
+                Ver todos los reportes
               </Link>
             </div>
           </div>
@@ -134,13 +134,12 @@ export default function Home() {
         <div className="container">
           <div className="stats-grid">
             {[
-              { value: stats.total, label: 'Reportes totales', icon: '📋', color: 'neutral' },
-              { value: stats.perdidas, label: 'Mascotas perdidas', icon: '🔴', color: 'danger' },
-              { value: stats.encontradas, label: 'Mascotas encontradas', icon: '🟢', color: 'success' },
-              { value: stats.reunificadas, label: 'Reunificaciones', icon: '🏠', color: 'amber' },
+              { value: stats.total,        label: 'Reportes totales',     icon: null, color: 'neutral' },
+              { value: stats.perdidas,     label: 'Mascotas perdidas',    icon: null, color: 'danger'  },
+              { value: stats.encontradas,  label: 'Mascotas encontradas', icon: null, color: 'success' },
+              { value: stats.reunificadas, label: 'Reunificaciones',      icon: null, color: 'amber'   },
             ].map((s, i) => (
               <div key={i} className={`stat-card stat-${s.color}`}>
-                <span className="stat-icon">{s.icon}</span>
                 <span className="stat-value">{loading ? '—' : s.value}</span>
                 <span className="stat-label">{s.label}</span>
               </div>
@@ -164,7 +163,7 @@ export default function Home() {
             <div className="loader"><div className="spinner"></div></div>
           ) : (
             <div className="mascotas-grid">
-              {recientes.map(m => <CardMascota key={m.id_mascota} mascota={m} />)}
+              {recientes.map(m => <CardMascota key={m.id_mascota ?? m.idMascota} mascota={m} />)}
             </div>
           )}
         </div>
@@ -178,14 +177,13 @@ export default function Home() {
 
           <div className="steps-grid">
             {[
-              { n: '01', icon: '📝', title: 'Reportas', desc: 'Completas el formulario con fotos y características físicas de la mascota.' },
-              { n: '02', icon: '🔍', title: 'Motor de coincidencias', desc: 'Nuestro algoritmo analiza raza, color, tamaño y ubicación para detectar coincidencias.' },
-              { n: '03', icon: '📍', title: 'Geolocalización', desc: 'El mapa identifica zonas críticas y acerca casos similares por proximidad.' },
-              { n: '04', icon: '🏠', title: 'Reunificación', desc: 'Conectamos a los dueños con quienes encontraron a la mascota.' },
+              { n: '01', title: 'Reportas',                    desc: 'Completas el formulario con fotos y características físicas de la mascota.' },
+              { n: '02', title: 'Motor de coincidencias',       desc: 'Nuestro algoritmo analiza raza, color, tamaño y ubicación para detectar coincidencias.' },
+              { n: '03', title: 'Geolocalización',              desc: 'El mapa identifica zonas críticas y acerca casos similares por proximidad.' },
+              { n: '04', title: 'Reunificación',                desc: 'Conectamos a los dueños con quienes encontraron a la mascota.' },
             ].map(s => (
               <div key={s.n} className="step-card">
                 <span className="step-number">{s.n}</span>
-                <span className="step-icon">{s.icon}</span>
                 <h3 className="step-title">{s.title}</h3>
                 <p className="step-desc">{s.desc}</p>
               </div>

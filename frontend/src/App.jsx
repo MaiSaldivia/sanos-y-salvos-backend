@@ -32,7 +32,7 @@ function App() {
               <Route path="/admin"        element={<Admin />} />
               <Route path="*" element={
                 <div className="container" style={{padding:'80px 24px', textAlign:'center'}}>
-                  <div style={{fontSize:'4rem'}}>🐾</div>
+                  <div style={{fontSize:'4rem', color:'var(--stone-light)'}}>404</div>
                   <h2 style={{marginTop:'16px'}}>Página no encontrada</h2>
                   <a href="/" className="btn btn-primary" style={{marginTop:20}}>Ir al inicio</a>
                 </div>

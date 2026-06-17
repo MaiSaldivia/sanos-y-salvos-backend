@@ -56,9 +56,9 @@ export default function DetalleMascota() {
   if (!mascota) return null;
 
   const estadoCfg = {
-    PERDIDA:    { label: 'Perdida',    cls: 'tag-perdida',    icon: '🔴' },
-    ENCONTRADA: { label: 'Encontrada', cls: 'tag-encontrada', icon: '🟢' },
-    REUNIFICADA:{ label: 'Reunificada',cls: 'tag-reunificada',icon: '🏠' }
+    PERDIDA:    { label: 'Perdida',    cls: 'tag-perdida'    },
+    ENCONTRADA: { label: 'Encontrada', cls: 'tag-encontrada' },
+    REUNIFICADA:{ label: 'Reunificada',cls: 'tag-reunificada'}
   };
   const cfg   = estadoCfg[mascota.estado] || estadoCfg.PERDIDA;
   // Soporte camelCase (backend real) y snake_case (legacy)
@@ -92,7 +92,7 @@ export default function DetalleMascota() {
     setReportingEncuentro(true);
     try {
       await mascotasService.reportarEncuentro(idMascota, encuentroForm);
-      addToast('Solicitud enviada a revisión ✅', 'success');
+      addToast('Solicitud enviada a revisión', 'success');
       setOpenEncuentro(false);
       setEncuentroForm({ foto_evidencia_url:'', encontrada_en:'', contacto_nombre:'', contacto_telefono:'' });
     } catch (err) {
@@ -128,7 +128,7 @@ export default function DetalleMascota() {
               className="detalle-foto"
               onError={() => setImgError(true)}
             />
-            <span className={`tag ${cfg.cls} detalle-estado`}>{cfg.icon} {cfg.label}</span>
+            <span className={`tag ${cfg.cls} detalle-estado`}>{cfg.label}</span>
           </div>
 
           {/* Info */}
@@ -165,29 +165,28 @@ export default function DetalleMascota() {
             )}
 
             <div className="detalle-contacto">
-              <h3>📞 Contacto</h3>
+              <h3>Contacto</h3>
               <div className="contacto-grid">
                 {mascota.contacto && (
                   /\S+@\S+\.\S+/.test(mascota.contacto)
-                    ? <a href={`mailto:${mascota.contacto}`} className="contacto-item">✉️ {mascota.contacto}</a>
-                    : <a href={`tel:${mascota.contacto}`}   className="contacto-item">📱 {mascota.contacto}</a>
+                    ? <a href={`mailto:${mascota.contacto}`} className="contacto-item">{mascota.contacto}</a>
+                    : <a href={`tel:${mascota.contacto}`}   className="contacto-item">{mascota.contacto}</a>
                 )}
                 {mascota.telefono && (
-                  <a href={`tel:${mascota.telefono}`} className="contacto-item">📱 {mascota.telefono}</a>
+                  <a href={`tel:${mascota.telefono}`} className="contacto-item">{mascota.telefono}</a>
                 )}
               </div>
             </div>
 
-            {/* Acciones */}
             <div className="detalle-acciones">
               {mascota.estado === 'PERDIDA' && (
                 <button className="btn btn-primary" onClick={() => setOpenEncuentro(true)}>
-                  🐾 Reportar encuentro
+                  Reportar encuentro
                 </button>
               )}
               {esModerador && (
                 <button className="btn btn-outline" onClick={() => setOpenEstado(true)}>
-                  ✏️ Cambiar estado
+                  Cambiar estado
                 </button>
               )}
             </div>

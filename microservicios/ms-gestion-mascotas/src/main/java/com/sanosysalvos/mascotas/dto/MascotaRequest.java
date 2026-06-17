@@ -1,5 +1,7 @@
 package com.sanosysalvos.mascotas.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import com.sanosysalvos.mascotas.model.EstadoMascota;
@@ -10,8 +12,14 @@ import lombok.Data;
 @Data
 public class MascotaRequest {
 
+    // @JsonProperty fuerza el nombre snake_case en la deserialización (porque SNAKE_CASE
+    // global convierte el campo Java "tipoAnimal" → busca "tipo_animal" en el JSON).
+    // @JsonAlias permite que el frontend también envíe el nombre camelCase sin romper nada.
+
     @NotBlank(message = "El tipo de animal es obligatorio")
     @Size(max = 50, message = "El tipo de animal no puede superar los 50 caracteres")
+    @JsonProperty("tipo_animal")
+    @JsonAlias("tipoAnimal")
     private String tipoAnimal;
 
     @Size(max = 80, message = "La raza no puede superar los 80 caracteres")
@@ -21,6 +29,8 @@ public class MascotaRequest {
     private String nombre;
 
     @Size(max = 60, message = "El color no puede superar los 60 caracteres")
+    @JsonProperty("color_primario")
+    @JsonAlias("colorPrimario")
     private String colorPrimario;
 
     // Nullable — el usuario puede no seleccionar tamaño
@@ -34,6 +44,8 @@ public class MascotaRequest {
     private String edad;
 
     // fotoUrl puede ser base64 (LONGTEXT), no se limita en tamaño aquí
+    @JsonProperty("foto_url")
+    @JsonAlias("fotoUrl")
     private String fotoUrl;
 
     // Coordenadas validadas por rango geográfico de Chile
@@ -60,12 +72,7 @@ public class MascotaRequest {
     @Size(max = 1000, message = "La descripción no puede superar los 1000 caracteres")
     private String descripcion;
 
-    // Contacto: email válido o teléfono (mínimo 7 chars con dígitos/+/-/espacio/paréntesis)
     @Size(max = 120, message = "El contacto no puede superar los 120 caracteres")
-    @Pattern(
-        regexp = "^$|^[\\w.+\\-]+@[\\w.\\-]+\\.[a-zA-Z]{2,}$|^[+0-9\\s()\\-]{7,20}$",
-        message = "El contacto debe ser un email válido o un teléfono con entre 7 y 20 caracteres"
-    )
     private String contacto;
 
     @Pattern(

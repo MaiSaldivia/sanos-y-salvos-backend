@@ -1,4 +1,4 @@
-# Sanos y Salvos — Plataforma de Microservicios
+# Sanos y Salvos 
 
 **Proyecto Fullstack III · DuocUC 2026**  
 **Estudiantes:** Bastian Martinez Flores · Maicol Saldivia Silva  
@@ -134,6 +134,16 @@ http://localhost:5173
 
 **Desde PowerShell** (copia y pega cada línea):
 
+
+
+mvn clean test -f microservicios/ms-gestion-mascotas/pom.xml
+mvn clean test -f microservicios/ms-geolocalizacion/pom.xml
+mvn clean test -f microservicios/ms-motor-coincidencias/pom.xml
+mvn clean test -f microservicios/ms-usuarios-entidades/pom.xml
+
+
+
+(mi compu XD)
 ```powershell
 & "D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-gestion-mascotas\pom.xml" clean test
 

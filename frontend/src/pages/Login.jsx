@@ -61,7 +61,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const user = await authService.register(nombre, email, password, 'DUENO');
+      const user = await authService.register(nombre, email, password, rol);
       addToast(`¡Cuenta creada! Bienvenido/a, ${user.nombre}`, 'success');
       navigate('/mascotas');
     } catch (err) {

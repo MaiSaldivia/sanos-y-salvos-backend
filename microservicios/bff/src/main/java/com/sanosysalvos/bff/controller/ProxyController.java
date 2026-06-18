@@ -117,8 +117,8 @@ public class ProxyController {
     private String determineServiceName(String uri) {
         if (uri.startsWith("/api/usuarios") || uri.startsWith("/api/auth"))   return "ms-usuarios-entidades";
         if (uri.startsWith("/api/mascotas") || uri.startsWith("/api/alertas")) return "ms-gestion-mascotas";
-        if (uri.startsWith("/api/geolocalizacion"))                            return "ms-geolocalizacion";
-        if (uri.startsWith("/api/motor"))                                      return "ms-motor-coincidencias";
+        if (uri.startsWith("/api/geolocalizacion") || uri.startsWith("/api/geo")) return "ms-geolocalizacion";
+        if (uri.startsWith("/api/motor") || uri.startsWith("/api/coincidencias")) return "ms-motor-coincidencias";
         return "unknown";
     }
 }

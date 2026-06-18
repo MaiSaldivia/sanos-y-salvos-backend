@@ -17,25 +17,26 @@ import java.util.Map;
 public class JwtUtil {
 
     private final Key key;
-    private final long EXPIRATION_TIME = 8 * 60 * 60 * 1000; // 8 hours in ms
+    private final long expirationTime;
 
-    public JwtUtil(@Value("${jwt.secret}") String secret) {
-        // Aseguramos que la clave tenga al menos 256 bits (32 bytes) para HS256
+    public JwtUtil(@Value("${jwt.secret}") String secret,
+                   @Value("${jwt.expiration:86400000}") long expiration) {
         String paddedSecret = (secret + "sanos-y-salvos-secret-2026-padding-key").substring(0, 32);
-        this.key = Keys.hmacShaKeyFor(paddedSecret.getBytes(StandardCharsets.UTF_8));
+        this.key           = Keys.hmacShaKeyFor(paddedSecret.getBytes(StandardCharsets.UTF_8));
+        this.expirationTime = expiration;
     }
 
     public String generarToken(String idUsuario, String nombre, String email, Rol rol) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("rol", rol.name());
+        claims.put("rol",    rol.name());
         claims.put("nombre", nombre);
-        claims.put("email", email);
+        claims.put("email",  email);
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(idUsuario)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -53,8 +54,12 @@ public class JwtUtil {
     }
 
     public boolean validarToken(String token) {
-        Claims claims = extraerClaims(token);
-        return claims != null && !claims.getExpiration().before(new Date());
+        try {
+            Claims claims = extraerClaims(token);
+            return claims != null && !claims.getExpiration().before(new Date());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public String extraerSubject(String token) {

@@ -10,9 +10,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173", "http://localhost:3000") // frontend urls
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                // 5173 = vite dev  |  4173 = vite preview  |  3000 = alternativo común
+                .allowedOrigins(
+                    "http://localhost:5173",
+                    "http://localhost:4173",
+                    "http://localhost:3000",
+                    "http://127.0.0.1:5173",
+                    "http://127.0.0.1:4173"
+                )
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")
-                .allowCredentials(true);
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }

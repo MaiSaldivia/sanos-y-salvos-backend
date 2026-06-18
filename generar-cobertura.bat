@@ -7,10 +7,9 @@ set MVN=
 where mvn >nul 2>&1
 if %errorlevel% equ 0 (
     set MVN=mvn
-) else if exist "D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" (
-    set MVN=D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd
 ) else (
     echo [ERROR] No se encontro Maven.
+    echo Instala Maven y agregalo al PATH.
     pause
     exit /b 1
 )

@@ -29,20 +29,31 @@ export default function Admin() {
 
   const cargarTodo = async () => {
     setLoading(true);
-    try {
-      const [uRes, eRes, sRes] = await Promise.all([
-        adminService.listarUsuarios(),
-        adminService.getEstadisticas(),
-        mascotasService.getEncuentrosRevision(),
-      ]);
-      // listarUsuarios retorna ResponseWrapper { success, data: [...] }
-      const uData = Array.isArray(uRes.data?.data) ? uRes.data.data : Array.isArray(uRes.data) ? uRes.data : [];
-      const eData = eRes.data?.data ?? eRes.data;
+    // Cada petición independiente — si una falla las otras siguen
+    const [uRes, eRes, sRes] = await Promise.allSettled([
+      adminService.listarUsuarios(),
+      adminService.getEstadisticas(),
+      mascotasService.getEncuentrosRevision(),
+    ]);
+
+    if (uRes.status === 'fulfilled') {
+      const uData = Array.isArray(uRes.value.data?.data)
+        ? uRes.value.data.data
+        : Array.isArray(uRes.value.data) ? uRes.value.data : [];
       setUsuarios(uData);
-      setEstadUsers(eData);
-      setSolicitudes(Array.isArray(sRes.data) ? sRes.data : []);
-    } catch { addToast('Error al cargar datos', 'error'); }
-    finally { setLoading(false); }
+    } else {
+      addToast('Error al cargar usuarios', 'error');
+    }
+
+    if (eRes.status === 'fulfilled') {
+      setEstadUsers(eRes.value.data?.data ?? eRes.value.data);
+    }
+
+    if (sRes.status === 'fulfilled') {
+      setSolicitudes(Array.isArray(sRes.value.data) ? sRes.value.data : []);
+    }
+
+    setLoading(false);
   };
 
   const cambiarRol = async (id) => {

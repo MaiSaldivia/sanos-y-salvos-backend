@@ -9,16 +9,8 @@
   margin-bottom: 28px;
 }
 
-.page-title {
-  font-size: 2rem;
-  color: var(--charcoal);
-}
-
-.page-sub {
-  color: var(--stone-light);
-  font-size: 0.92rem;
-  margin-top: 4px;
-}
+/* duplicado intencionalmente removido — page-title y page-sub
+   están definidos en styles/main.css como clases globales */
 
 .filters-bar {
   background: var(--warm-white);

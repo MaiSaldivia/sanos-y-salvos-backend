@@ -48,21 +48,25 @@ export default function Home() {
 
   useEffect(() => {
     const fetchData = async () => {
+      // Estadísticas y mascotas por separado — si una falla la otra sigue
       try {
-        const [statsRes, mascotasRes] = await Promise.all([
-          mascotasService.getEstadisticas(),
-          mascotasService.getAll()
-        ]);
-        // Mascotas devuelve array directo, estadisticas también directo (no ResponseWrapper)
+        const statsRes = await mascotasService.getEstadisticas();
         const statsData = statsRes.data?.data ?? statsRes.data ?? {};
-        setStats({ total: 0, perdidas: 0, encontradas: 0, reunificadas: 0, ...statsData });
+        setStats(prev => ({ ...prev, ...statsData }));
+      } catch {
+        // Si falla estadísticas, los contadores quedan en 0 — no es crítico
+      }
+
+      try {
+        const mascotasRes = await mascotasService.getAll();
         const lista = Array.isArray(mascotasRes.data) ? mascotasRes.data : [];
         setRecientes(lista.slice(0, 3));
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+      } catch {
+        // Si falla la lista, queda vacía — no es crítico
+        setRecientes([]);
       }
+
+      setLoading(false);
     };
     fetchData();
   }, []);

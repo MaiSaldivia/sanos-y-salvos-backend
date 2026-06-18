@@ -5,7 +5,7 @@ const USER_KEY  = 'sanos_user';
 
 const API = axios.create({
   baseURL: '/api',
-  timeout: 8000,
+  timeout: 15000,  // 15s — los microservicios Spring Boot pueden tardar al arrancar
   headers: { 'Content-Type': 'application/json' }
 });
 
@@ -16,11 +16,31 @@ API.interceptors.request.use(config => {
   return config;
 });
 
+// Reintento automático en dos casos:
+//  1. Error de red pura (sin respuesta HTTP): timeout, ECONNABORTED, Network Error
+//  2. HTTP 503 — microservicio arrancando lento, reintenta 1 vez tras 2 segundos
 API.interceptors.response.use(
   res => res,
-  err => {
+  async err => {
     const cb = err.response?.data?.circuitBreaker;
     if (cb) console.warn(`[CircuitBreaker] ${cb.nombre} está ${cb.estado}`);
+
+    const status        = err.response?.status;
+    const esErrorDeRed  = !err.response && (
+      err.code === 'ECONNABORTED' ||
+      err.code === 'ERR_NETWORK'  ||
+      err.message === 'Network Error'
+    );
+    const es503         = status === 503;
+    const yaReintentado = err.config?._retry;
+
+    if ((esErrorDeRed || es503) && !yaReintentado) {
+      err.config._retry = true;
+      // 2 segundos de espera para dar tiempo al microservicio a levantar
+      await new Promise(r => setTimeout(r, 2000));
+      return API(err.config);
+    }
+
     return Promise.reject(err);
   }
 );

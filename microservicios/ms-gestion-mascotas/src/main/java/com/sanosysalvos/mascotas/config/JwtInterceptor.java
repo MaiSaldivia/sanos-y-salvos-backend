@@ -31,21 +31,32 @@ public class JwtInterceptor implements HandlerInterceptor {
             String token = extractToken(request);
             if (token == null || !jwtUtil.validarToken(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"message\":\"Token requerido o inválido\"}");
                 return false;
             }
 
             String userId = jwtUtil.extraerUserId(token);
-            String role = jwtUtil.extraerRol(token);
-            
-            request.setAttribute("userId", userId);
-            request.setAttribute("userRole", role);
+            String role   = jwtUtil.extraerRol(token);
+
+            if (userId == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"message\":\"Token malformado\"}");
+                return false;
+            }
+
+            request.setAttribute("userId",   userId);
+            request.setAttribute("userRole", role != null ? role : "");
 
             RequireRole requireRole = method.getMethodAnnotation(RequireRole.class);
-            if (requireRole != null) {
+            if (requireRole != null && role != null) {
                 com.sanosysalvos.mascotas.model.Rol[] allowedRoles = requireRole.value();
                 boolean hasRole = Arrays.stream(allowedRoles).anyMatch(r -> r.name().equals(role));
                 if (!hasRole) {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"message\":\"Permisos insuficientes\"}");
                     return false;
                 }
             }

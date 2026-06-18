@@ -123,8 +123,12 @@ export default function DetalleMascota() {
           {/* Foto */}
           <div className="detalle-foto-wrap">
             <img
-              src={imgError ? 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=600&q=80' : fotoUrl}
-              alt={mascota.nombre}
+              src={
+                imgError || !fotoUrl
+                  ? 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=600&q=80'
+                  : fotoUrl
+              }
+              alt={mascota.nombre || 'Mascota'}
               className="detalle-foto"
               onError={() => setImgError(true)}
             />

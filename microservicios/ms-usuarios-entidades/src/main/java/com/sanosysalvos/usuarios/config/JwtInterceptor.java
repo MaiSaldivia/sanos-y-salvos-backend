@@ -29,15 +29,13 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
 
         HandlerMethod handlerMethod = (HandlerMethod) handler;
-        boolean requiresAuth = handlerMethod.hasMethodAnnotation(RequireAuth.class) 
+        boolean requiresAuth = handlerMethod.hasMethodAnnotation(RequireAuth.class)
                 || handlerMethod.getBeanType().isAnnotationPresent(RequireAuth.class);
         boolean requiresRole = handlerMethod.hasMethodAnnotation(RequireRole.class)
                 || handlerMethod.getBeanType().isAnnotationPresent(RequireRole.class);
 
-        // Si no requiere auth ni rol, dejamos pasar
+        // Si no requiere auth ni rol, intentar extraer token de todas formas (opcional)
         if (!requiresAuth && !requiresRole) {
-            // Sin embargo, si hay un token válido presente, extraemos los datos igualmente 
-            // (por ejemplo para el endpoint de reportar mascota que asocia el id_usuario si está logueado)
             extraerTokenSiExiste(request);
             return true;
         }
@@ -55,14 +53,33 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
 
         Claims claims = jwtUtil.extraerClaims(token);
-        String userId = claims.getSubject();
-        String rolString = (String) claims.get("rol");
-        Rol rol = Rol.valueOf(rolString);
+        if (claims == null) {
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Token inválido");
+            return false;
+        }
 
-        request.setAttribute("userId", userId);
-        request.setAttribute("userRol", rol);
+        String userId    = claims.getSubject();
+        String rolString = (String) claims.get("rol");
+
+        // Validar que el token tenga los campos requeridos
+        if (userId == null || rolString == null) {
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Token malformado");
+            return false;
+        }
+
+        Rol rol;
+        try {
+            rol = Rol.valueOf(rolString);
+        } catch (IllegalArgumentException e) {
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Rol inválido en el token");
+            return false;
+        }
+
+        request.setAttribute("userId",    userId);
+        request.setAttribute("userRole",  rolString);  // String — compatible con ms-gestion-mascotas
+        request.setAttribute("userRol",   rol);         // Rol enum — para RequireRole
         request.setAttribute("userNombre", claims.get("nombre"));
-        request.setAttribute("userEmail", claims.get("email"));
+        request.setAttribute("userEmail",  claims.get("email"));
 
         if (requiresRole) {
             RequireRole requireRoleAnnotation = handlerMethod.getMethodAnnotation(RequireRole.class);
@@ -84,16 +101,24 @@ public class JwtInterceptor implements HandlerInterceptor {
     }
 
     private void extraerTokenSiExiste(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            if (jwtUtil.validarToken(token)) {
-                Claims claims = jwtUtil.extraerClaims(token);
-                if (claims != null) {
-                    request.setAttribute("userId", claims.getSubject());
-                    request.setAttribute("userRol", Rol.valueOf((String) claims.get("rol")));
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                if (jwtUtil.validarToken(token)) {
+                    Claims claims = jwtUtil.extraerClaims(token);
+                    if (claims != null && claims.getSubject() != null) {
+                        request.setAttribute("userId",   claims.getSubject());
+                        String rolStr = (String) claims.get("rol");
+                        if (rolStr != null) {
+                            request.setAttribute("userRole", rolStr);
+                            request.setAttribute("userRol",  Rol.valueOf(rolStr));
+                        }
+                    }
                 }
             }
+        } catch (Exception ignored) {
+            // Token opcional — si falla, simplemente no se setean los atributos
         }
     }
 

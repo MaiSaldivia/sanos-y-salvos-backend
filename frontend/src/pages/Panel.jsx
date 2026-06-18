@@ -26,7 +26,10 @@ export default function Panel() {
       setSolicitudes(Array.isArray(res.data) ? res.data : []);
     } catch {
       addToast('Error al cargar solicitudes', 'error');
-    } finally { setLoading(false); }
+      setSolicitudes([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const revisar = async (id, accion) => {

@@ -38,6 +38,9 @@ export default function Mapa() {
 
   const [mascotas,     setMascotas]     = useState([]);
   const [loading,      setLoading]      = useState(true);
+  // mapReady es estado (no ref) para que el efecto de marcadores se re-ejecute
+  // cuando el mapa termine de inicializar
+  const [mapReady,     setMapReady]     = useState(false);
   const [filterEstado, setFilterEstado] = useState('');
   const [selected,     setSelected]     = useState(null);
   const [vistaCalor,   setVistaCalor]   = useState(false);
@@ -73,14 +76,17 @@ export default function Mapa() {
     }).addTo(map);
 
     leafletRef.current = map;
+    // Señalamos con estado para que el efecto de marcadores se active
+    setMapReady(true);
 
     return () => {
       map.remove();
       leafletRef.current = null;
+      setMapReady(false);
     };
   }, [loading]);
 
-  // ── Actualizar marcadores cuando cambian filtros o datos ─────────────
+  // ── Actualizar marcadores cuando cambian filtros, datos o el mapa está listo ──
   useEffect(() => {
     const map = leafletRef.current;
     if (!map) return;
@@ -101,7 +107,11 @@ export default function Mapa() {
 
     if (vistaCalor) {
       // Mapa de calor con leaflet.heat
+      // Capturamos la ref del mapa para evitar usar el mapa ya destruido
+      // si el componente desmonta antes de que la importación resuelva
+      let cancelled = false;
       import('leaflet.heat').then(() => {
+        if (cancelled || !leafletRef.current) return;
         const points = validas.map(m => [m.latitud, m.longitud, 1]);
         if (points.length === 0) return;
         const heat = L.heatLayer(points, {
@@ -109,10 +119,10 @@ export default function Mapa() {
           blur:      15,
           maxZoom:   17,
           gradient:  { 0.2: '#38a169', 0.5: '#d69e2e', 0.8: '#e53e3e' },
-        }).addTo(map);
+        }).addTo(leafletRef.current);
         heatLayerRef.current = heat;
       });
-      return;
+      return () => { cancelled = true; };
     }
 
     // Marcadores normales
@@ -166,7 +176,7 @@ export default function Mapa() {
       const group = L.featureGroup(markersRef.current);
       map.fitBounds(group.getBounds().pad(0.15), { maxZoom: 15 });
     }
-  }, [mascotas, filterEstado, vistaCalor, leafletRef.current]);
+  }, [mascotas, filterEstado, vistaCalor, mapReady]);
 
   // Puente para el botón dentro del popup (no puede usar navigate directamente)
   useEffect(() => {

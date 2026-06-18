@@ -14,6 +14,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
-                .addPathPatterns("/api/**");
+                .addPathPatterns("/api/**")
+                // Excluir rutas públicas que no necesitan token
+                .excludePathPatterns(
+                    "/api/auth/login",
+                    "/api/auth/register",
+                    "/api/mascotas",
+                    "/api/mascotas/busqueda",
+                    "/api/mascotas/estadisticas",
+                    "/api/mascotas/{id}",
+                    "/api/mascotas/encuentros/revision"
+                );
     }
 }

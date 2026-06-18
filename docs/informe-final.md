@@ -1,4 +1,4 @@
-# Informe Fullstack III
+﻿# Informe Fullstack III
 # Caso C: "Sanos y Salvos"
 
 **Nombres:** Bastián Amir André Martínez Flores · Maicol Antonio Saldivia Silva  
@@ -428,18 +428,18 @@ const API = axios.create({ baseURL: '/api', timeout: 8000 });
 
 **Desde PowerShell:**
 ```powershell
-& "D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-gestion-mascotas\pom.xml" clean test
+& mvn -f microservicios\ms-gestion-mascotas\pom.xml" clean test
 
-& "D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-motor-coincidencias\pom.xml" clean test
+& mvn -f microservicios\ms-motor-coincidencias\pom.xml" clean test
 
-& "D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-usuarios-entidades\pom.xml" clean test
+& mvn -f microservicios\ms-usuarios-entidades\pom.xml" clean test
 
-& "D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-geolocalizacion\pom.xml" clean test
+& mvn -f microservicios\ms-geolocalizacion\pom.xml" clean test
 ```
 
 **Generar reporte JaCoCo HTML:**
 ```powershell
-& "D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-motor-coincidencias\pom.xml" test jacoco:report
+& mvn -f microservicios\ms-motor-coincidencias\pom.xml" test jacoco:report
 ```
 Reporte en: `microservicios\<nombre>\target\site\jacoco\index.html`
 

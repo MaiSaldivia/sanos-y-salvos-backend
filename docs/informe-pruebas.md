@@ -1,4 +1,4 @@
-# Informe de Pruebas Unitarias — Sanos y Salvos
+﻿# Informe de Pruebas Unitarias — Sanos y Salvos
 
 **Proyecto:** Plataforma de Microservicios para Reporte de Mascotas  
 **Asignatura:** Fullstack III · DuocUC 2026  
@@ -38,37 +38,37 @@ Las pruebas se desarrollaron con **JUnit 5** y **Mockito 5**, siguiendo el patr�
 ### Desde CMD
 
 ```cmd
-"D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-gestion-mascotas\pom.xml" test
+mvn -f microservicios\ms-gestion-mascotas\pom.xml" test
 
-"D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-motor-coincidencias\pom.xml" test
+mvn -f microservicios\ms-motor-coincidencias\pom.xml" test
 
-"D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-usuarios-entidades\pom.xml" test
+mvn -f microservicios\ms-usuarios-entidades\pom.xml" test
 
-"D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-geolocalizacion\pom.xml" test
+mvn -f microservicios\ms-geolocalizacion\pom.xml" test
 ```
 
 ### Desde PowerShell
 
 ```powershell
-& "D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-gestion-mascotas\pom.xml" test
+& mvn -f microservicios\ms-gestion-mascotas\pom.xml" test
 
-& "D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-motor-coincidencias\pom.xml" test
+& mvn -f microservicios\ms-motor-coincidencias\pom.xml" test
 
-& "D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-usuarios-entidades\pom.xml" test
+& mvn -f microservicios\ms-usuarios-entidades\pom.xml" test
 
-& "D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-geolocalizacion\pom.xml" test
+& mvn -f microservicios\ms-geolocalizacion\pom.xml" test
 ```
 
 ### Generar reportes JaCoCo HTML
 
 ```cmd
-"D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-gestion-mascotas\pom.xml" test jacoco:report
+mvn -f microservicios\ms-gestion-mascotas\pom.xml" test jacoco:report
 
-"D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-motor-coincidencias\pom.xml" test jacoco:report
+mvn -f microservicios\ms-motor-coincidencias\pom.xml" test jacoco:report
 
-"D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-usuarios-entidades\pom.xml" test jacoco:report
+mvn -f microservicios\ms-usuarios-entidades\pom.xml" test jacoco:report
 
-"D:\JUEGOS XD\Maven\apache-maven-3.9.16\bin\mvn.cmd" -f "D:\JUEGOS XD\sanos-y-salvos\microservicios\ms-geolocalizacion\pom.xml" test jacoco:report
+mvn -f microservicios\ms-geolocalizacion\pom.xml" test jacoco:report
 ```
 
 Los reportes HTML quedan en: `microservicios\<nombre>\target\site\jacoco\index.html`

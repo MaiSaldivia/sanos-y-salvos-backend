@@ -50,7 +50,7 @@ start_service() {
     mkdir -p "$BASE_DIR/logs"
     echo -e "${GREEN}[INFO]${NC} Iniciando ${name} (Puerto ${port})..."
     cd "$dir"
-    mvn spring-boot:run > "$log_file" 2>&1 &
+    mvn spring-boot:run -Dmaven.test.skip=true > "$log_file" 2>&1 &
     echo $! > "$BASE_DIR/logs/${name}.pid"
     cd "$BASE_DIR"
     sleep 2

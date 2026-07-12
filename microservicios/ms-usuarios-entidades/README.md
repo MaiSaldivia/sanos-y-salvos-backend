@@ -7,7 +7,7 @@ Microservicio de autenticación y gestión de usuarios. Maneja el registro, logi
 
 ---
 
-## Tecnologías utilizadas
+## Tecnologías Utilizadas
 
 | Tecnología        | Versión  | Propósito                              |
 |-------------------|----------|----------------------------------------|
